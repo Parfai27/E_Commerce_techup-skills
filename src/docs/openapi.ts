@@ -4,7 +4,7 @@ export const openApiSpec = {
     title: "KLab TechUp Skills API",
     version: "1.0.0",
     description:
-      "REST API for managing products. Products are stored in MongoDB and remain available after the server restarts.",
+      "REST API for managing products in MongoDB. Product routes require a Bearer JWT from POST /api/auth/login.",
   },
   servers: [
     {
@@ -38,6 +38,7 @@ export const openApiSpec = {
       get: {
         tags: ["Products"],
         summary: "List products",
+        security: [{ bearerAuth: [] }],
         description: "Returns every product stored in MongoDB.",
         responses: {
           "200": {
@@ -56,6 +57,7 @@ export const openApiSpec = {
       post: {
         tags: ["Products"],
         summary: "Create a product",
+        security: [{ bearerAuth: [] }],
         description: "Adds a product. `name`, `category`, and `price` are required. MongoDB assigns `_id` automatically.",
         requestBody: {
           required: true,
@@ -95,6 +97,7 @@ export const openApiSpec = {
       get: {
         tags: ["Products"],
         summary: "Get a product",
+        security: [{ bearerAuth: [] }],
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         responses: {
           "200": {
@@ -119,6 +122,7 @@ export const openApiSpec = {
       put: {
         tags: ["Products"],
         summary: "Update a product",
+        security: [{ bearerAuth: [] }],
         description: "Updates the fields included in the body. Omitted fields keep their current values.",
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         requestBody: {
@@ -153,6 +157,7 @@ export const openApiSpec = {
       delete: {
         tags: ["Products"],
         summary: "Delete a product",
+        security: [{ bearerAuth: [] }],
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         responses: {
           "200": {
@@ -177,6 +182,13 @@ export const openApiSpec = {
     },
   },
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
     parameters: {
       ProductId: {
         name: "id",
