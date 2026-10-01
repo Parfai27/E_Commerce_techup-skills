@@ -23,8 +23,8 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-app.use("/api",ProductRoute)
 app.use("/api/auth", authRouter)
+app.use("/api",ProductRoute)
 
 connectDB();
 
