@@ -64,9 +64,8 @@
                   "  pm.response.to.have.status(200);",
                   "});",
                   "const products = pm.response.json();",
-                  "pm.test('returns the seeded products', function () {",
-                  "  pm.expect(products).to.be.an('array').with.lengthOf.at.least(2);",
-                  "  pm.expect(products[0]).to.include({ id: 1, name: 'I Phone 17 Pro', category: 'Electronic', price: 8000 });",
+                  "pm.test('returns products from MongoDB', function () {",
+                  "  pm.expect(products).to.be.an('array');",
                   "});"
                 ]
               }
@@ -78,31 +77,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/products/1"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('returns product 1', function () {",
-                  "  pm.expect(pm.response.json()).to.include({ id: 1, name: 'I Phone 17 Pro' });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get missing product",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/products/9999"
+            "url": "{{baseUrl}}/api/products/000000000000000000000001"
           },
           "event": [
             {
@@ -114,7 +89,31 @@
                   "  pm.response.to.have.status(404);",
                   "});",
                   "pm.test('explains that the product is missing', function () {",
-                  "  pm.expect(pm.response.json()).to.have.property('message', 'Product Not found');",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'Product Not Found');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get missing product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/000000000000000000000999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('explains that the product is missing', function () {",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'Product Not Found');",
                   "});"
                 ]
               }
@@ -147,7 +146,7 @@
                   "  pm.response.to.have.status(400);",
                   "});",
                   "pm.test('requires name, category, and price', function () {",
-                  "  pm.expect(pm.response.json()).to.have.property('message', 'name , category and price are required');",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'name, category, price required');",
                   "});"
                 ]
               }
@@ -181,11 +180,11 @@
                   "});",
                   "const body = pm.response.json();",
                   "pm.test('returns the created product', function () {",
-                  "  pm.expect(body.message).to.eql('Product added ');",
+                  "  pm.expect(body.message).to.eql('Product Created');",
                   "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', category: 'Electronic', price: 6500 });",
-                  "  pm.expect(body.product.id).to.be.a('number');",
+                  "  pm.expect(body.product._id).to.be.a('string');",
                   "});",
-                  "pm.collectionVariables.set('productId', String(body.product.id));"
+                  "pm.collectionVariables.set('productId', String(body.product._id));"
                 ]
               }
             }
@@ -209,7 +208,7 @@
                   "});",
                   "pm.test('returns the product saved from create', function () {",
                   "  pm.expect(pm.response.json()).to.include({",
-                  "    id: Number(pm.collectionVariables.get('productId')),",
+                  "    _id: pm.collectionVariables.get('productId'),",
                   "    name: 'Samsung Galaxy'",
                   "  });",
                   "});"
@@ -245,7 +244,7 @@
                   "});",
                   "pm.test('updates price and keeps the other fields', function () {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.message).to.eql('Product Updated successfull');",
+                  "  pm.expect(body.message).to.eql('Product Updated');",
                   "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', category: 'Electronic', price: 7000 });",
                   "});"
                 ]
@@ -267,7 +266,7 @@
               "mode": "raw",
               "raw": "{\n  \"price\": 1\n}"
             },
-            "url": "{{baseUrl}}/api/products/9999"
+            "url": "{{baseUrl}}/api/products/000000000000000000000999"
           },
           "event": [
             {
@@ -279,7 +278,7 @@
                   "  pm.response.to.have.status(404);",
                   "});",
                   "pm.test('explains that the product is missing', function () {",
-                  "  pm.expect(pm.response.json()).to.have.property('message', 'product notfound');",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'Product Not Found');",
                   "});"
                 ]
               }
@@ -304,9 +303,8 @@
                   "});",
                   "pm.test('returns the deleted product', function () {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.message).to.eql('Product delete Successfully');",
-                  "  pm.expect(body.product).to.be.an('array').with.lengthOf(1);",
-                  "  pm.expect(body.product[0]).to.include({ name: 'Samsung Galaxy', price: 7000 });",
+                  "  pm.expect(body.message).to.eql('Product Deleted');",
+                  "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', price: 7000 });",
                   "});"
                 ]
               }
@@ -339,7 +337,7 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "{{baseUrl}}/api/products/9999"
+            "url": "{{baseUrl}}/api/products/000000000000000000000999"
           },
           "event": [
             {
@@ -351,7 +349,7 @@
                   "  pm.response.to.have.status(404);",
                   "});",
                   "pm.test('explains that the product is missing', function () {",
-                  "  pm.expect(pm.response.json()).to.have.property('message', 'product is not Found');",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'Product Not Found');",
                   "});"
                 ]
               }
