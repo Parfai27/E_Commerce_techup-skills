@@ -1,6 +1,6 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A minimal REST API built with **Node.js**, **Express.js**, and **TypeScript**. It shows how to set up an Express server in TypeScript, run it with hot reload, and test its endpoints with Postman.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB. Account registration and login are in place and return a JWT. Product routes are still public; authentication middleware is not added yet.
 
 ---
 
@@ -28,6 +28,10 @@ A minimal REST API built with **Node.js**, **Express.js**, and **TypeScript**. I
 | [Express.js](https://expressjs.com/) | Web framework |
 | [ts-node](https://typestrong.org/ts-node/) | Runs TypeScript directly without a separate build step |
 | [Nodemon](https://nodemon.io/) | Restarts the server automatically on file changes |
+| [MongoDB](https://www.mongodb.com/) | Persistent product and user storage |
+| [Mongoose](https://mongoosejs.com/) | MongoDB object modeling |
+| [bcrypt](https://github.com/kelektiv/node.bcrypt.js) | Password hashing for registration and login |
+| [JSON Web Token](https://jwt.io/) | Login token returned by `POST /api/auth/login` |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
 
@@ -37,6 +41,7 @@ A minimal REST API built with **Node.js**, **Express.js**, and **TypeScript**. I
 
 - **Node.js** v18 or later
 - **npm** (bundled with Node.js)
+- **MongoDB** running locally
 - **Postman** (optional, for manual API testing)
 
 Verify your installation:
@@ -64,7 +69,17 @@ npm install
 npm install -D typescript ts-node @types/node
 ```
 
-### 3. Start the development server
+### 3. Create a `.env` file
+
+```env
+PORT=1000
+MONGO_URI=mongodb://localhost:27017/E_Commerce
+JWT_SECRET=replace-with-a-long-random-string
+```
+
+`.env` is listed in `.gitignore` and is not committed.
+
+### 4. Start the development server
 
 ```bash
 npm run dev
@@ -73,7 +88,8 @@ npm run dev
 On success, the console prints:
 
 ```text
-Example app listening on port 1000
+Server running on port 1000
+MongoDB connected successfully
 ```
 
 The API is now available at **http://localhost:1000**. Interactive docs are at **http://localhost:1000/api-docs**.
@@ -109,17 +125,28 @@ Create `src/server.ts` (on Windows PowerShell: `New-Item src/server.ts`), then a
 ```text
 klab-techup-skills/
 ├── src/
-│   ├── docs/
-│   │   └── openapi.ts   # OpenAPI document served by Swagger UI
+│   ├── config/
+│   │   └── db.ts                 # MongoDB connection
 │   ├── controller/
+│   │   ├── auth.controller.ts    # Register and login
+│   │   └── product.controller.ts
+│   ├── docs/
+│   │   └── openapi.ts            # OpenAPI document served by Swagger UI
 │   ├── model/
+│   │   ├── product.model.ts
+│   │   └── user.model.ts
 │   ├── router/
-│   └── server.ts        # Application entry point
-├── package.json         # Project metadata and scripts
-├── package-lock.json    # Locked dependency versions
-├── tsconfig.json        # TypeScript compiler configuration
+│   │   ├── auth.router.ts
+│   │   └── product.router.ts
+│   └── server.ts                 # Application entry point
+├── .env                          # Local only: PORT, MONGO_URI, JWT_SECRET
+├── package.json
+├── package-lock.json
+├── tsconfig.json
 └── README.md
 ```
+
+`src/middleware/` is not part of the project yet. Product routes do not check a token.
 
 ### Entry point — `src/server.ts`
 
@@ -156,11 +183,35 @@ Open **http://localhost:1000/api-docs** while the server is running. The raw Ope
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/` | Welcome message |
-| `GET` | `/api/products` | List products |
-| `GET` | `/api/products/{id}` | Get one product |
-| `POST` | `/api/products` | Create a product |
-| `PUT` | `/api/products/{id}` | Update a product |
-| `DELETE` | `/api/products/{id}` | Delete a product |
+| `POST` | `/api/auth/register` | Create an account. Password is stored as a bcrypt hash. |
+| `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
+| `GET` | `/api/products` | List products. Public for now. |
+| `GET` | `/api/products/{id}` | Get one product. Public for now. |
+| `POST` | `/api/products` | Create a product. Public for now. |
+| `PUT` | `/api/products/{id}` | Update a product. Public for now. |
+| `DELETE` | `/api/products/{id}` | Delete a product. Public for now. |
+
+### `POST /api/auth/register`
+
+| Property | Value |
+| --- | --- |
+| URL | `http://localhost:1000/api/auth/register` |
+| Method | `POST` |
+| Body | `{ "name", "email", "password" }` |
+| Success status | `201 Created` |
+
+The response includes `id`, `name`, and `email`. It does not include the password.
+
+### `POST /api/auth/login`
+
+| Property | Value |
+| --- | --- |
+| URL | `http://localhost:1000/api/auth/login` |
+| Method | `POST` |
+| Body | `{ "email", "password" }` |
+| Success status | `200 OK` |
+
+The response includes `token` plus `id`, `name`, and `email`. Sending that token on product requests is not required yet.
 
 ### `GET /`
 
@@ -243,11 +294,13 @@ npx tsc --init
 
 This project is a learning foundation for backend development. Planned improvements:
 
+- [x] Database integration (MongoDB at `mongodb://localhost:27017/E_Commerce`)
+- [x] Environment variables for `PORT`, `MONGO_URI`, and `JWT_SECRET`
+- [x] User registration and login (`POST /api/auth/register`, `POST /api/auth/login`)
+- [ ] Authentication middleware
+- [ ] Protect product routes with the JWT
 - [ ] Additional API routes
 - [ ] Controller and service layers
-- [ ] Custom middleware
-- [ ] Environment variable configuration
-- [ ] Database integration
 - [ ] Request validation
 - [ ] Centralized error handling
 - [ ] Automated tests
