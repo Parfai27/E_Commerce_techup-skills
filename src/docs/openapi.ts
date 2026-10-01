@@ -4,7 +4,7 @@ export const openApiSpec = {
     title: "KLab TechUp Skills API",
     version: "1.0.0",
     description:
-      "REST API for managing products. Products are stored in memory and reset when the server restarts.",
+      "REST API for managing products. Products are stored in MongoDB and remain available after the server restarts.",
   },
   servers: [
     {
@@ -38,7 +38,7 @@ export const openApiSpec = {
       get: {
         tags: ["Products"],
         summary: "List products",
-        description: "Returns every product currently stored in memory.",
+        description: "Returns every product stored in MongoDB.",
         responses: {
           "200": {
             description: "Array of products",
@@ -56,7 +56,7 @@ export const openApiSpec = {
       post: {
         tags: ["Products"],
         summary: "Create a product",
-        description: "Adds a product. `name`, `category`, and `price` are required. The id is assigned automatically.",
+        description: "Adds a product. `name`, `category`, and `price` are required. MongoDB assigns `_id` automatically.",
         requestBody: {
           required: true,
           content: {
@@ -84,7 +84,7 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ErrorMessage" },
-                example: { message: "name , category and price are required" },
+                example: { message: "name, category, price required" },
               },
             },
           },
@@ -110,7 +110,7 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ErrorMessage" },
-                example: { message: "Product Not found" },
+                example: { message: "Product Not Found" },
               },
             },
           },
@@ -144,7 +144,7 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ErrorMessage" },
-                example: { message: "product notfound" },
+                example: { message: "Product Not Found" },
               },
             },
           },
@@ -156,7 +156,7 @@ export const openApiSpec = {
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         responses: {
           "200": {
-            description: "Product deleted. `product` is an array containing the removed item.",
+            description: "Product deleted. `product` is the removed document.",
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ProductDeleted" },
@@ -168,7 +168,7 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ErrorMessage" },
-                example: { message: "product is not Found" },
+                example: { message: "Product Not Found" },
               },
             },
           },
@@ -182,19 +182,21 @@ export const openApiSpec = {
         name: "id",
         in: "path",
         required: true,
-        description: "Numeric product id",
-        schema: { type: "integer", example: 1 },
+        description: "MongoDB product id",
+        schema: { type: "string", example: "66f1c2a4b8e4d21a0c1e9a11" },
       },
     },
     schemas: {
       Product: {
         type: "object",
-        required: ["id", "name", "category", "price"],
+        required: ["_id", "name", "category", "price"],
         properties: {
-          id: { type: "integer", example: 1 },
+          _id: { type: "string", example: "66f1c2a4b8e4d21a0c1e9a11" },
           name: { type: "string", example: "I Phone 17 Pro" },
           category: { type: "string", example: "Electronic" },
           price: { type: "number", example: 8000 },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
         },
       },
       ProductInput: {
@@ -225,7 +227,7 @@ export const openApiSpec = {
         type: "object",
         required: ["message", "product"],
         properties: {
-          message: { type: "string", example: "Product added " },
+          message: { type: "string", example: "Product Created" },
           product: { $ref: "#/components/schemas/Product" },
         },
       },
@@ -233,11 +235,8 @@ export const openApiSpec = {
         type: "object",
         required: ["message", "product"],
         properties: {
-          message: { type: "string", example: "Product delete Successfully" },
-          product: {
-            type: "array",
-            items: { $ref: "#/components/schemas/Product" },
-          },
+          message: { type: "string", example: "Product Deleted" },
+          product: { $ref: "#/components/schemas/Product" },
         },
       },
     },
