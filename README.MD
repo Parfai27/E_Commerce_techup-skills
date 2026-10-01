@@ -1,6 +1,6 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB. Account registration and login are in place and return a JWT. Product routes are still public; authentication middleware is not added yet.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB. Register and login issue a JWT, and every product route requires that token.
 
 ---
 
@@ -132,6 +132,8 @@ klab-techup-skills/
 │   │   └── product.controller.ts
 │   ├── docs/
 │   │   └── openapi.ts            # OpenAPI document served by Swagger UI
+│   ├── middleware/
+│   │   └── auth.middleware.ts    # Requires a Bearer JWT
 │   ├── model/
 │   │   ├── product.model.ts
 │   │   └── user.model.ts
@@ -146,7 +148,7 @@ klab-techup-skills/
 └── README.md
 ```
 
-`src/middleware/` is not part of the project yet. Product routes do not check a token.
+Welcome (`GET /`) and the auth routes stay public. `authenticate` runs before every product route.
 
 ### Entry point — `src/server.ts`
 
@@ -185,11 +187,11 @@ Open **http://localhost:1000/api-docs** while the server is running. The raw Ope
 | `GET` | `/` | Welcome message |
 | `POST` | `/api/auth/register` | Create an account. Password is stored as a bcrypt hash. |
 | `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
-| `GET` | `/api/products` | List products. Public for now. |
-| `GET` | `/api/products/{id}` | Get one product. Public for now. |
-| `POST` | `/api/products` | Create a product. Public for now. |
-| `PUT` | `/api/products/{id}` | Update a product. Public for now. |
-| `DELETE` | `/api/products/{id}` | Delete a product. Public for now. |
+| `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. |
+| `GET` | `/api/products/{id}` | Get one product. Requires a Bearer token. |
+| `POST` | `/api/products` | Create a product. Requires a Bearer token. |
+| `PUT` | `/api/products/{id}` | Update a product. Requires a Bearer token. |
+| `DELETE` | `/api/products/{id}` | Delete a product. Requires a Bearer token. |
 
 ### `POST /api/auth/register`
 
@@ -211,7 +213,13 @@ The response includes `id`, `name`, and `email`. It does not include the passwor
 | Body | `{ "email", "password" }` |
 | Success status | `200 OK` |
 
-The response includes `token` plus `id`, `name`, and `email`. Sending that token on product requests is not required yet.
+The response includes `token` plus `id`, `name`, and `email`. Send that token on every product request:
+
+```http
+Authorization: Bearer <token>
+```
+
+A product request with no header returns `401` and `{ "message": "Authentication token is required" }`. A bad or expired token returns `401` and `{ "message": "Invalid or expired token" }`.
 
 ### `GET /`
 
@@ -245,7 +253,7 @@ Hello World!
 2. In Postman, choose **Import** and select `postman/KLab-TechUp-Skills.postman_collection.json`.
 3. Open the collection and click **Run**. Leave `baseUrl` as `http://localhost:1000`.
 
-The runner checks the welcome route and the product CRUD flow: list, get, missing product, validation error, create, update, and delete. Each request includes the expected status and body.
+The runner checks the welcome route, registers or finds a user, logs in, rejects a product request that has no token, then runs the product CRUD flow with the saved Bearer token.
 
 To send one request by hand, use **GET** `http://localhost:1000/` and expect `200 OK` with `Hello World!`.
 
@@ -297,8 +305,8 @@ This project is a learning foundation for backend development. Planned improveme
 - [x] Database integration (MongoDB at `mongodb://localhost:27017/E_Commerce`)
 - [x] Environment variables for `PORT`, `MONGO_URI`, and `JWT_SECRET`
 - [x] User registration and login (`POST /api/auth/register`, `POST /api/auth/login`)
-- [ ] Authentication middleware
-- [ ] Protect product routes with the JWT
+- [x] Authentication middleware (`Authorization: Bearer <token>`)
+- [x] Protect product routes with the JWT
 - [ ] Additional API routes
 - [ ] Controller and service layers
 - [ ] Request validation
