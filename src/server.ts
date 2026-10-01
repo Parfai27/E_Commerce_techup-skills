@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import ProductRoute from "./router/product.router";
+import authRouter from "./router/auth.router";
 import { openApiSpec } from "./docs/openapi";
 import { connectDB } from "./config/db";
 
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 })
 
 app.use("/api",ProductRoute)
+app.use("/api/auth", authRouter)
 
 connectDB();
 
