@@ -33,8 +33,20 @@ export const register = async (req: Request, res: Response) => {
       password: hashedPassword,
     });
      
-    await sendWelcomeEmail(user.email, user.name);
-    
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (error) {
+      console.error("Error sending welcome email:\n", error);
+      return res.status(201).json({
+        message: "User registered successfully, but the welcome email could not be sent",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    }
+
     return res.status(201).json({
       message: "User registered successfully",
       user: {
