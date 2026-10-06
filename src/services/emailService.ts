@@ -2,17 +2,12 @@ import { transporter } from "../config/mail";
 import { welcomeEmailTemplate } from "../templates/welcome.template";
 
 const sendEmail = async (to: string, subject: string, html: string) => {
-  if (
-    !process.env.EMAIL_HOST ||
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASSWORD ||
-    !process.env.EMAIL_FROM
-  ) {
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     throw new Error("Email is not configured");
   }
 
   await transporter.sendMail({
-    from: `"E_Commerce App" <${process.env.EMAIL_FROM}>`,
+    from: `"E_Commerce App" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,
