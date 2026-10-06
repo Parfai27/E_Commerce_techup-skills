@@ -3,10 +3,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const port = Number(process.env.EMAIL_PORT) || 587;
+const host = process.env.EMAIL_HOST;
+const port = host === "smtp.gmail.com" ? 465 : Number(process.env.EMAIL_PORT) || 587;
 
 export const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
+  host,
   port,
   secure: port === 465,
   auth: {
