@@ -1,6 +1,6 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB. Register and login issue a JWT, and every product route requires that token.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token.
 
 ---
 
@@ -32,6 +32,8 @@ A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB
 | [Mongoose](https://mongoosejs.com/) | MongoDB object modeling |
 | [bcrypt](https://github.com/kelektiv/node.bcrypt.js) | Password hashing for registration and login |
 | [JSON Web Token](https://jwt.io/) | Login token returned by `POST /api/auth/login` |
+| [Cloudinary](https://cloudinary.com/) | Stores and delivers product images |
+| [Multer](https://github.com/expressjs/multer) | Reads the uploaded image from `multipart/form-data` |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
 
@@ -75,6 +77,9 @@ npm install -D typescript ts-node @types/node
 PORT=1000
 MONGO_URI=mongodb://localhost:27017/E_Commerce
 JWT_SECRET=replace-with-a-long-random-string
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 `.env` is listed in `.gitignore` and is not committed.
@@ -126,6 +131,7 @@ Create `src/server.ts` (on Windows PowerShell: `New-Item src/server.ts`), then a
 klab-techup-skills/
 ├── src/
 │   ├── config/
+│   │   ├── cloudinary.ts         # Cloudinary SDK configuration
 │   │   └── db.ts                 # MongoDB connection
 │   ├── controller/
 │   │   ├── auth.controller.ts    # Register and login
@@ -133,7 +139,8 @@ klab-techup-skills/
 │   ├── docs/
 │   │   └── openapi.ts            # OpenAPI document served by Swagger UI
 │   ├── middleware/
-│   │   └── auth.middleware.ts    # Requires a Bearer JWT
+│   │   ├── auth.middleware.ts    # Requires a Bearer JWT
+│   │   └── uploadMiddleware.ts   # Reads the product image into memory
 │   ├── model/
 │   │   ├── product.model.ts
 │   │   └── user.model.ts
@@ -141,7 +148,7 @@ klab-techup-skills/
 │   │   ├── auth.router.ts
 │   │   └── product.router.ts
 │   └── server.ts                 # Application entry point
-├── .env                          # Local only: PORT, MONGO_URI, JWT_SECRET
+├── .env                          # Local only: PORT, MONGO_URI, JWT_SECRET, Cloudinary keys
 ├── package.json
 ├── package-lock.json
 ├── tsconfig.json
@@ -189,9 +196,9 @@ Open **http://localhost:1000/api-docs** while the server is running. The raw Ope
 | `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
 | `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. |
 | `GET` | `/api/products/{id}` | Get one product. Requires a Bearer token. |
-| `POST` | `/api/products` | Create a product. Requires a Bearer token. |
-| `PUT` | `/api/products/{id}` | Update a product. Requires a Bearer token. |
-| `DELETE` | `/api/products/{id}` | Delete a product. Requires a Bearer token. |
+| `POST` | `/api/products` | Create a product with `multipart/form-data`: `name`, `category`, `price`, and `image`. Requires a Bearer token. |
+| `PUT` | `/api/products/{id}` | Update a product with form-data. Include `image` only when replacing the picture. Requires a Bearer token. |
+| `DELETE` | `/api/products/{id}` | Delete the product and its Cloudinary image. Requires a Bearer token. |
 
 ### `POST /api/auth/register`
 
@@ -220,6 +227,21 @@ Authorization: Bearer <token>
 ```
 
 A product request with no header returns `401` and `{ "message": "Authentication token is required" }`. A bad or expired token returns `401` and `{ "message": "Invalid or expired token" }`.
+
+### `POST /api/products`
+
+Send **form-data**, not JSON. The file field name is `image`. MongoDB stores `imageUrl` and `imagePublicId`. The image file itself stays on Cloudinary.
+
+| Key | Type | Example |
+| --- | --- | --- |
+| `name` | Text | Nike Shoes |
+| `category` | Text | Shoes |
+| `price` | Text | 50000 |
+| `image` | File | a `.jpg` or `.png` |
+
+A successful create returns `201` and `Product created successfully`, including an `imageUrl` that starts with `https://res.cloudinary.com/`.
+
+`PUT /api/products/{id}` uses the same form-data. Leave `image` out to keep the current picture. `DELETE /api/products/{id}` removes the MongoDB document and the Cloudinary file.
 
 ### `GET /`
 
@@ -303,10 +325,11 @@ npx tsc --init
 This project is a learning foundation for backend development. Planned improvements:
 
 - [x] Database integration (MongoDB at `mongodb://localhost:27017/E_Commerce`)
-- [x] Environment variables for `PORT`, `MONGO_URI`, and `JWT_SECRET`
+- [x] Environment variables for `PORT`, `MONGO_URI`, `JWT_SECRET`, and Cloudinary
 - [x] User registration and login (`POST /api/auth/register`, `POST /api/auth/login`)
 - [x] Authentication middleware (`Authorization: Bearer <token>`)
 - [x] Protect product routes with the JWT
+- [x] Product image upload, replace, and delete with Cloudinary
 - [ ] Additional API routes
 - [ ] Controller and service layers
 - [ ] Request validation

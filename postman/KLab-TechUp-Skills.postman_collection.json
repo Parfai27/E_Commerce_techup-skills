@@ -116,6 +116,53 @@
               }
             }
           ]
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aimable@gmail.com\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aimable@gmail.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/reset-password"
+          }
         }
       ]
     },
@@ -258,7 +305,7 @@
                   "  pm.response.to.have.status(400);",
                   "});",
                   "pm.test('requires name, category, and price', function () {",
-                  "  pm.expect(pm.response.json()).to.have.property('message', 'name, category, price required');",
+                  "  pm.expect(pm.response.json()).to.have.property('message', 'Name, category and price are required');",
                   "});"
                 ]
               }
@@ -269,15 +316,14 @@
           "name": "Create product",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Samsung Galaxy\",\n  \"category\": \"Electronic\",\n  \"price\": 6500\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Samsung Galaxy", "type": "text" },
+                { "key": "category", "value": "Electronic", "type": "text" },
+                { "key": "price", "value": "6500", "type": "text" },
+                { "key": "image", "type": "file", "src": "" }
+              ]
             },
             "url": "{{baseUrl}}/api/products"
           },
@@ -292,8 +338,9 @@
                   "});",
                   "const body = pm.response.json();",
                   "pm.test('returns the created product', function () {",
-                  "  pm.expect(body.message).to.eql('Product Created');",
+                  "  pm.expect(body.message).to.eql('Product created successfully');",
                   "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', category: 'Electronic', price: 6500 });",
+                  "  pm.expect(body.product.imageUrl).to.be.a('string').and.not.empty;",
                   "  pm.expect(body.product._id).to.be.a('string');",
                   "});",
                   "pm.collectionVariables.set('productId', String(body.product._id));"
@@ -333,15 +380,11 @@
           "name": "Update product",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"price\": 7000\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "price", "value": "7000", "type": "text" }
+              ]
             },
             "url": "{{baseUrl}}/api/products/{{productId}}"
           },
@@ -356,7 +399,7 @@
                   "});",
                   "pm.test('updates price and keeps the other fields', function () {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.message).to.eql('Product Updated');",
+                  "  pm.expect(body.message).to.eql('Product updated successfully');",
                   "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', category: 'Electronic', price: 7000 });",
                   "});"
                 ]
@@ -413,10 +456,9 @@
                   "pm.test('status is 200', function () {",
                   "  pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('returns the deleted product', function () {",
+                  "pm.test('deletes the product', function () {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.message).to.eql('Product Deleted');",
-                  "  pm.expect(body.product).to.include({ name: 'Samsung Galaxy', price: 7000 });",
+                  "  pm.expect(body.message).to.eql('Product deleted successfully');",
                   "});"
                 ]
               }
