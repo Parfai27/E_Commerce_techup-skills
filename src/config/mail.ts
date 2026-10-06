@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const host = process.env.EMAIL_HOST;
-const port = host === "smtp.gmail.com" ? 465 : Number(process.env.EMAIL_PORT) || 587;
+const port = Number(process.env.EMAIL_PORT) || 587;
 
 export const transporter = nodemailer.createTransport({
   host,

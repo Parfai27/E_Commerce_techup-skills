@@ -89,13 +89,16 @@ JWT_SECRET=replace-with-a-long-random-string
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-EMAIL_HOST=smtp.gmail.com
+EMAIL_HOST=smtp-relay.brevo.com
 EMAIL_PORT=587
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_gmail_app_password
+EMAIL_USER=your_brevo_smtp_login
+EMAIL_PASSWORD=your_brevo_smtp_key
+EMAIL_FROM=your_verified_sender@example.com
 ```
 
 `.env` is listed in `.gitignore` and is not committed. For a deployed database, set `MONGO_URI` to your MongoDB Atlas connection string. Do not commit that string.
+
+Mail goes out through Brevo. `EMAIL_USER` is the Brevo SMTP login, `EMAIL_PASSWORD` is the SMTP key, and `EMAIL_FROM` must be a sender you have verified in Brevo.
 
 ### 4. Start the development server
 
@@ -156,7 +159,7 @@ Render builds from `render.yaml` on the `main` branch:
 
 Set these environment variables in the Render dashboard. They are not stored in Git:
 
-`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`.
+`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM`.
 
 Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0/0` so the hosted app can reach the database.
 
