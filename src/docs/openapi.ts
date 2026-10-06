@@ -58,17 +58,12 @@ export const openApiSpec = {
         tags: ["Products"],
         summary: "Create a product",
         security: [{ bearerAuth: [] }],
-        description: "Adds a product. `name`, `category`, and `price` are required. MongoDB assigns `_id` automatically.",
+        description: "Adds a product from multipart/form-data. `name`, `category`, `price`, and `image` are required. The image is stored on Cloudinary; MongoDB stores the URL and public id.",
         requestBody: {
           required: true,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: { $ref: "#/components/schemas/ProductInput" },
-              example: {
-                name: "Samsung Galaxy",
-                category: "Electronic",
-                price: 6500,
-              },
             },
           },
         },
@@ -86,7 +81,7 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ErrorMessage" },
-                example: { message: "name, category, price required" },
+                example: { message: "Name, category and price are required" },
               },
             },
           },
@@ -123,14 +118,13 @@ export const openApiSpec = {
         tags: ["Products"],
         summary: "Update a product",
         security: [{ bearerAuth: [] }],
-        description: "Updates the fields included in the body. Omitted fields keep their current values.",
+        description: "Updates fields sent as multipart/form-data. Include `image` only when replacing the Cloudinary file.",
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         requestBody: {
-          required: true,
+          required: false,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: { $ref: "#/components/schemas/ProductUpdate" },
-              example: { price: 7500 },
             },
           },
         },
@@ -161,10 +155,11 @@ export const openApiSpec = {
         parameters: [{ $ref: "#/components/parameters/ProductId" }],
         responses: {
           "200": {
-            description: "Product deleted. `product` is the removed document.",
+            description: "Product and its Cloudinary image were deleted.",
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ProductDeleted" },
+                schema: { $ref: "#/components/schemas/ErrorMessage" },
+                example: { message: "Product deleted successfully" },
               },
             },
           },
@@ -201,23 +196,29 @@ export const openApiSpec = {
     schemas: {
       Product: {
         type: "object",
-        required: ["_id", "name", "category", "price"],
+        required: ["_id", "name", "category", "price", "imageUrl", "imagePublicId"],
         properties: {
           _id: { type: "string", example: "66f1c2a4b8e4d21a0c1e9a11" },
           name: { type: "string", example: "I Phone 17 Pro" },
           category: { type: "string", example: "Electronic" },
           price: { type: "number", example: 8000 },
+          imageUrl: {
+            type: "string",
+            example: "https://res.cloudinary.com/vodrx8vs/image/upload/v1/products/example.jpg",
+          },
+          imagePublicId: { type: "string", example: "products/example" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
       },
       ProductInput: {
         type: "object",
-        required: ["name", "category", "price"],
+        required: ["name", "category", "price", "image"],
         properties: {
           name: { type: "string", example: "Samsung Galaxy" },
           category: { type: "string", example: "Electronic" },
           price: { type: "number", example: 6500 },
+          image: { type: "string", format: "binary" },
         },
       },
       ProductUpdate: {
@@ -226,6 +227,7 @@ export const openApiSpec = {
           name: { type: "string", example: "I Phone 17 Pro" },
           category: { type: "string", example: "Electronic" },
           price: { type: "number", example: 7500 },
+          image: { type: "string", format: "binary" },
         },
       },
       ErrorMessage: {
@@ -239,7 +241,7 @@ export const openApiSpec = {
         type: "object",
         required: ["message", "product"],
         properties: {
-          message: { type: "string", example: "Product Created" },
+          message: { type: "string", example: "Product created successfully" },
           product: { $ref: "#/components/schemas/Product" },
         },
       },
@@ -247,7 +249,7 @@ export const openApiSpec = {
         type: "object",
         required: ["message", "product"],
         properties: {
-          message: { type: "string", example: "Product Deleted" },
+          message: { type: "string", example: "Product deleted successfully" },
           product: { $ref: "#/components/schemas/Product" },
         },
       },

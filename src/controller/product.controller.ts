@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Product from "../model/product.model";
+import cloudinary from "../config/cloudinary";
 
 const readId = (id: string | string[] | undefined) => {
   if (typeof id === "string") return id;
@@ -9,6 +10,28 @@ const readId = (id: string | string[] | undefined) => {
 };
 
 const isObjectId = (id: string) => mongoose.Types.ObjectId.isValid(id);
+
+const uploadToCloudinary = (
+  buffer: Buffer,
+): Promise<{ secure_url: string; public_id: string }> => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "products",
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error("Cloudinary upload failed"));
+          return;
+        }
+
+        resolve(result);
+      },
+    );
+
+    uploadStream.end(buffer);
+  });
+};
 
 export const getProduct = async (req: Request, res: Response) => {
   try {
@@ -50,27 +73,39 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
-    const { name, category, price } = req.body;
+    const { name, category, price } = req.body ?? {};
 
-    if (!name || !category || price === undefined) {
+    if (!name || !category || !price) {
       return res.status(400).json({
-        message: "name, category, price required",
+        message: "Name, category and price are required",
       });
     }
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Product image is required",
+      });
+    }
+
+    const uploadResult = await uploadToCloudinary(req.file.buffer);
 
     const product = await Product.create({
       name,
       category,
       price,
+      imageUrl: uploadResult.secure_url,
+      imagePublicId: uploadResult.public_id,
     });
 
     return res.status(201).json({
-      message: "Product Created",
+      message: "Product created successfully",
       product,
     });
   } catch (error) {
+    console.error(error);
+
     return res.status(500).json({
-      message: "Failed to create product",
+      message: "Server error",
     });
   }
 };
@@ -85,10 +120,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
-    const product = await Product.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -96,13 +128,34 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
+    const { name, category, price } = req.body ?? {};
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+
+      if (product.imagePublicId) {
+        await cloudinary.uploader.destroy(product.imagePublicId);
+      }
+
+      product.imageUrl = uploadResult.secure_url;
+      product.imagePublicId = uploadResult.public_id;
+    }
+
+    if (name) product.name = name;
+    if (category) product.category = category;
+    if (price) product.price = price;
+
+    await product.save();
+
     return res.status(200).json({
-      message: "Product Updated",
+      message: "Product updated successfully",
       product,
     });
   } catch (error) {
+    console.error(error);
+
     return res.status(500).json({
-      message: "Failed to update product",
+      message: "Server error",
     });
   }
 };
@@ -117,7 +170,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
       });
     }
 
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -125,13 +178,20 @@ export const deleteProduct = async (req: Request, res: Response) => {
       });
     }
 
+    if (product.imagePublicId) {
+      await cloudinary.uploader.destroy(product.imagePublicId);
+    }
+
+    await Product.findByIdAndDelete(id);
+
     return res.status(200).json({
-      message: "Product Deleted",
-      product,
+      message: "Product deleted successfully",
     });
   } catch (error) {
+    console.error(error);
+
     return res.status(500).json({
-      message: "Failed to delete product",
+      message: "Server error",
     });
   }
 };
