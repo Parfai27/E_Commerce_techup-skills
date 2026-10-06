@@ -1,6 +1,12 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token. Password reset sends a one-time code by email.
+
+**Live API:** [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com)
+
+**API docs:** [https://e-commerce-techup-skills.onrender.com/api-docs](https://e-commerce-techup-skills.onrender.com/api-docs)
+
+The service is hosted on [Render](https://render.com) (free plan). The first request after idle can take about a minute while the instance wakes up.
 
 ---
 
@@ -9,6 +15,7 @@ A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 - [Available Scripts](#available-scripts)
 - [API Reference](#api-reference)
@@ -34,6 +41,8 @@ A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB
 | [JSON Web Token](https://jwt.io/) | Login token returned by `POST /api/auth/login` |
 | [Cloudinary](https://cloudinary.com/) | Stores and delivers product images |
 | [Multer](https://github.com/expressjs/multer) | Reads the uploaded image from `multipart/form-data` |
+| [Nodemailer](https://nodemailer.com/) | Welcome email and password-reset codes |
+| [Render](https://render.com/) | Hosts the live API |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
 
@@ -41,9 +50,9 @@ A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB
 
 ## Prerequisites
 
-- **Node.js** v18 or later
+- **Node.js** v20 or later
 - **npm** (bundled with Node.js)
-- **MongoDB** running locally
+- **MongoDB** running locally, or a MongoDB Atlas cluster for deployment
 - **Postman** (optional, for manual API testing)
 
 Verify your installation:
@@ -60,7 +69,7 @@ npm --version
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Parfai27/E_Commerce_techup-skills.git
 cd klab-techup-skills
 ```
 
@@ -80,9 +89,13 @@ JWT_SECRET=replace-with-a-long-random-string
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_gmail_app_password
 ```
 
-`.env` is listed in `.gitignore` and is not committed.
+`.env` is listed in `.gitignore` and is not committed. For a deployed database, set `MONGO_URI` to your MongoDB Atlas connection string. Do not commit that string.
 
 ### 4. Start the development server
 
@@ -98,6 +111,8 @@ MongoDB connected successfully
 ```
 
 The API is now available at **http://localhost:1000**. Interactive docs are at **http://localhost:1000/api-docs**.
+
+The same API is deployed at **https://e-commerce-techup-skills.onrender.com**. Docs: **https://e-commerce-techup-skills.onrender.com/api-docs**.
 
 Nodemon watches the source files, so the server restarts automatically whenever you save a change in `src/`.
 
@@ -125,6 +140,28 @@ Create `src/server.ts` (on Windows PowerShell: `New-Item src/server.ts`), then a
 
 ---
 
+## Deployment
+
+The live service is [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com).
+
+Render builds from `render.yaml` on the `main` branch:
+
+| Setting | Value |
+| --- | --- |
+| Service | `e-commerce-techup-skills` |
+| Runtime | Node.js 22 |
+| Build | `npm install` |
+| Start | `npm start` |
+| Health check | `GET /` |
+
+Set these environment variables in the Render dashboard. They are not stored in Git:
+
+`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`.
+
+Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0/0` so the hosted app can reach the database.
+
+---
+
 ## Project Structure
 
 ```text
@@ -132,10 +169,15 @@ klab-techup-skills/
 ├── src/
 │   ├── config/
 │   │   ├── cloudinary.ts         # Cloudinary SDK configuration
-│   │   └── db.ts                 # MongoDB connection
+│   │   ├── db.ts                 # MongoDB connection
+│   │   └── mail.ts               # Nodemailer transport
 │   ├── controller/
-│   │   ├── auth.controller.ts    # Register and login
+│   │   ├── auth.controller.ts    # Register, login, password reset
 │   │   └── product.controller.ts
+│   ├── services/
+│   │   └── emailService.ts       # Welcome and reset emails
+│   ├── templates/
+│   │   └── welcome.template.ts   # Welcome email HTML
 │   ├── docs/
 │   │   └── openapi.ts            # OpenAPI document served by Swagger UI
 │   ├── middleware/
@@ -148,7 +190,8 @@ klab-techup-skills/
 │   │   ├── auth.router.ts
 │   │   └── product.router.ts
 │   └── server.ts                 # Application entry point
-├── .env                          # Local only: PORT, MONGO_URI, JWT_SECRET, Cloudinary keys
+├── .env                          # Local only. Never commit secrets
+├── render.yaml                   # Render web service definition
 ├── package.json
 ├── package-lock.json
 ├── tsconfig.json
@@ -181,19 +224,22 @@ app.listen(port, () => {
 | Command | Description |
 | --- | --- |
 | `npm run dev` | Starts the development server with Nodemon and ts-node |
+| `npm start` | Starts the server the way Render does (`ts-node --transpile-only`) |
 | `npx tsc` | Compiles TypeScript to JavaScript according to `tsconfig.json` |
 
 ---
 
 ## API Reference
 
-Open **http://localhost:1000/api-docs** while the server is running. The raw OpenAPI document is at **http://localhost:1000/api-docs.json**.
+Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-techup-skills.onrender.com/api-docs**. The raw OpenAPI document is at `/api-docs.json` on either host.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/` | Welcome message |
-| `POST` | `/api/auth/register` | Create an account. Password is stored as a bcrypt hash. |
+| `POST` | `/api/auth/register` | Create an account. Password is stored as a bcrypt hash. Sends a welcome email. |
 | `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
+| `POST` | `/api/auth/forgot-password` | Email a 6-digit reset code that expires in 10 minutes. |
+| `POST` | `/api/auth/reset-password` | Set a new password with that code. |
 | `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. |
 | `GET` | `/api/products/{id}` | Get one product. Requires a Bearer token. |
 | `POST` | `/api/products` | Create a product with `multipart/form-data`: `name`, `category`, `price`, and `image`. Requires a Bearer token. |
@@ -227,6 +273,14 @@ Authorization: Bearer <token>
 ```
 
 A product request with no header returns `401` and `{ "message": "Authentication token is required" }`. A bad or expired token returns `401` and `{ "message": "Invalid or expired token" }`.
+
+### `POST /api/auth/forgot-password`
+
+Body: `{ "email" }`. The response is the same whether or not that email is registered. When the account exists, a 6-digit code is emailed and stored as a hash for 10 minutes.
+
+### `POST /api/auth/reset-password`
+
+Body: `{ "email", "code", "newPassword" }`. A matching, unexpired code returns `200` and `Password reset successful`.
 
 ### `POST /api/products`
 
@@ -271,13 +325,14 @@ Hello World!
 
 ## Testing with Postman
 
-1. Start the server with `npm run dev`.
+1. Start the server with `npm run dev`, or use the live API.
 2. In Postman, choose **Import** and select `postman/KLab-TechUp-Skills.postman_collection.json`.
-3. Open the collection and click **Run**. Leave `baseUrl` as `http://localhost:1000`.
+3. Set the collection variable `baseUrl` to `http://localhost:1000` or `https://e-commerce-techup-skills.onrender.com` (no trailing slash, no port on the live URL).
+4. Open the collection and click **Run**.
 
 The runner checks the welcome route, registers or finds a user, logs in, rejects a product request that has no token, then runs the product CRUD flow with the saved Bearer token.
 
-To send one request by hand, use **GET** `http://localhost:1000/` and expect `200 OK` with `Hello World!`.
+To send one request by hand, use **GET** `https://e-commerce-techup-skills.onrender.com/` and expect `200 OK` with `Hello World!`.
 
 ---
 
@@ -324,18 +379,23 @@ npx tsc --init
 
 This project is a learning foundation for backend development. Planned improvements:
 
-- [x] Database integration (MongoDB at `mongodb://localhost:27017/E_Commerce`)
-- [x] Environment variables for `PORT`, `MONGO_URI`, `JWT_SECRET`, and Cloudinary
+- [x] Database integration (local MongoDB or MongoDB Atlas through `MONGO_URI`)
+- [x] Environment variables for `PORT`, `MONGO_URI`, `JWT_SECRET`, Cloudinary, and email
 - [x] User registration and login (`POST /api/auth/register`, `POST /api/auth/login`)
+- [x] Password reset by email (`POST /api/auth/forgot-password`, `POST /api/auth/reset-password`)
 - [x] Authentication middleware (`Authorization: Bearer <token>`)
 - [x] Protect product routes with the JWT
 - [x] Product image upload, replace, and delete with Cloudinary
+- [x] Deployed on Render at `https://e-commerce-techup-skills.onrender.com`
 - [ ] Additional API routes
-- [ ] Controller and service layers
 - [ ] Request validation
 - [ ] Centralized error handling
 - [ ] Automated tests
 - [x] API documentation (Swagger UI at `/api-docs`)
 
 ---
+
+## Author
+
+[Parfai27](https://github.com/Parfai27) — KLab TechUp Skills
 
