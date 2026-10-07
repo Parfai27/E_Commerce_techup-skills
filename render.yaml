@@ -19,11 +19,9 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: EMAIL_HOST
+      - key: MAILJET_API_KEY
         sync: false
-      - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_USER
+      - key: MAILJET_SECRET_KEY
         sync: false
-      - key: EMAIL_PASSWORD
+      - key: EMAIL_FROM
         sync: false
