@@ -95,7 +95,9 @@ EMAIL_FROM=your_verified_sender@example.com
 
 `.env` is listed in `.gitignore` and is not committed. For a deployed database, set `MONGO_URI` to your MongoDB Atlas connection string. Do not commit that string.
 
-Welcome and reset messages are sent through the SendGrid HTTPS API. `EMAIL_FROM` must be the Single Sender address you verified in SendGrid.
+Welcome and reset messages are sent with `@sendgrid/mail` through the SendGrid HTTPS API. `EMAIL_FROM` must be a Single Sender you verified in SendGrid.
+
+Gmail defers messages whose From address is `@gmail.com` when SendGrid is the sender, because that address is not aligned with SendGrid’s SPF or DKIM records. Registration still succeeds. Reliable delivery to any inbox needs a domain you authenticate in SendGrid, with `EMAIL_FROM` set to an address on that domain.
 
 ### 4. Start the development server
 
@@ -381,7 +383,7 @@ This project is a learning foundation for backend development. Planned improveme
 - [x] Database integration (local MongoDB or MongoDB Atlas through `MONGO_URI`)
 - [x] Environment variables for `PORT`, `MONGO_URI`, `JWT_SECRET`, Cloudinary, and email
 - [x] User registration and login (`POST /api/auth/register`, `POST /api/auth/login`)
-- [x] Password reset by email (`POST /api/auth/forgot-password`, `POST /api/auth/reset-password`)
+- [x] Welcome and password-reset email through SendGrid (`POST /api/auth/forgot-password`, `POST /api/auth/reset-password`)
 - [x] Authentication middleware (`Authorization: Bearer <token>`)
 - [x] Protect product routes with the JWT
 - [x] Product image upload, replace, and delete with Cloudinary
