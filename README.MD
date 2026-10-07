@@ -41,7 +41,7 @@ The service is hosted on [Render](https://render.com) (free plan). The first req
 | [JSON Web Token](https://jwt.io/) | Login token returned by `POST /api/auth/login` |
 | [Cloudinary](https://cloudinary.com/) | Stores and delivers product images |
 | [Multer](https://github.com/expressjs/multer) | Reads the uploaded image from `multipart/form-data` |
-| [Mailjet](https://www.mailjet.com/) | Welcome email and password-reset codes |
+| [Resend](https://resend.com/) | Welcome email and password-reset codes |
 | [Render](https://render.com/) | Hosts the live API |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
@@ -89,14 +89,13 @@ JWT_SECRET=replace-with-a-long-random-string
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-MAILJET_API_KEY=your_mailjet_api_key
-MAILJET_SECRET_KEY=your_mailjet_secret_key
-EMAIL_FROM=your_verified_sender@example.com
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=onboarding@resend.dev
 ```
 
 `.env` is listed in `.gitignore` and is not committed. For a deployed database, set `MONGO_URI` to your MongoDB Atlas connection string. Do not commit that string.
 
-`EMAIL_FROM` must be a sender address you activated in Mailjet. Welcome and reset messages are sent through the Mailjet HTTPS API.
+Welcome and reset messages are sent through the Resend HTTPS API. `onboarding@resend.dev` is Resend’s test sender and can deliver only to the email address on the Resend account. To email every registered user, verify a domain you own in Resend and set `EMAIL_FROM` to an address on that domain.
 
 ### 4. Start the development server
 
@@ -157,7 +156,7 @@ Render builds from `render.yaml` on the `main` branch:
 
 Set these environment variables in the Render dashboard. They are not stored in Git:
 
-`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY`, `EMAIL_FROM`.
+`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`.
 
 Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0/0` so the hosted app can reach the database.
 

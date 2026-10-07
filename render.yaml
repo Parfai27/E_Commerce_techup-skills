@@ -19,9 +19,7 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: MAILJET_API_KEY
-        sync: false
-      - key: MAILJET_SECRET_KEY
+      - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
         sync: false

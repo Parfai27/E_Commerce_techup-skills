@@ -4,41 +4,31 @@ import { welcomeEmailTemplate } from "../templates/welcome.template";
 dotenv.config();
 
 const sendEmail = async (to: string, subject: string, html: string) => {
-  const apiKey = process.env.MAILJET_API_KEY;
-  const secretKey = process.env.MAILJET_SECRET_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
 
-  if (!apiKey || !secretKey || !from) {
+  if (!apiKey || !from) {
     throw new Error("Email is not configured");
   }
 
-  const response = await fetch("https://api.mailjet.com/v3.1/send", {
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${Buffer.from(`${apiKey}:${secretKey}`).toString("base64")}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      Messages: [
-        {
-          From: { Email: from, Name: "E_Commerce App" },
-          To: [{ Email: to }],
-          Subject: subject,
-          HTMLPart: html,
-        },
-      ],
+      from: `E_Commerce App <${from}>`,
+      to: [to],
+      subject,
+      html,
     }),
   });
 
-  const body = (await response.json().catch(() => null)) as {
-    ErrorMessage?: string;
-    Messages?: { Status?: string; Errors?: { ErrorMessage?: string }[] }[];
-  } | null;
+  const body = (await response.json().catch(() => null)) as { message?: string } | null;
 
-  const mailjetMessage = body?.Messages?.[0]?.Errors?.[0]?.ErrorMessage || body?.ErrorMessage;
-
-  if (!response.ok || body?.Messages?.[0]?.Status === "error") {
-    throw new Error(mailjetMessage || "Mailjet request failed");
+  if (!response.ok) {
+    throw new Error(body?.message || "Resend request failed");
   }
 };
 
