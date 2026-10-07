@@ -1,34 +1,29 @@
 import dotenv from "dotenv";
+import sgMail from "@sendgrid/mail";
 import { welcomeEmailTemplate } from "../templates/welcome.template";
 
 dotenv.config();
 
 const sendEmail = async (to: string, subject: string, html: string) => {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.SENDGRID_API_KEY;
   const from = process.env.EMAIL_FROM;
 
   if (!apiKey || !from) {
     throw new Error("Email is not configured");
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      from: `E_Commerce App <${from}>`,
-      to: [to],
+  sgMail.setApiKey(apiKey);
+
+  try {
+    await sgMail.send({
+      to,
+      from: { email: from, name: "E_Commerce App" },
       subject,
       html,
-    }),
-  });
-
-  const body = (await response.json().catch(() => null)) as { message?: string } | null;
-
-  if (!response.ok) {
-    throw new Error(body?.message || "Resend request failed");
+    });
+  } catch (error) {
+    const response = (error as { response?: { body?: { errors?: { message?: string }[] } } }).response;
+    throw new Error(response?.body?.errors?.[0]?.message || "SendGrid request failed");
   }
 };
 
