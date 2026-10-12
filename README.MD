@@ -1,6 +1,6 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token. Password reset sends a one-time code by email.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**, plus a React storefront named **Selz** in `react-app`. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token. Password reset sends a one-time code by email.
 
 **Live API:** [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com)
 
@@ -15,6 +15,7 @@ The service is hosted on [Render](https://render.com) (free plan). The first req
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Selz storefront](#selz-storefront)
 - [Deployment](#deployment)
 - [Project Structure](#project-structure)
 - [Available Scripts](#available-scripts)
@@ -45,6 +46,9 @@ The service is hosted on [Render](https://render.com) (free plan). The first req
 | [Render](https://render.com/) | Hosts the live API |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
+| [React](https://react.dev/) | Selz storefront in `react-app` |
+| [Vite](https://vite.dev/) | Dev server and production build for Selz |
+| [Tailwind CSS](https://tailwindcss.com/) | Selz layout and styling |
 
 ---
 
@@ -118,6 +122,34 @@ The same API is deployed at **https://e-commerce-techup-skills.onrender.com**. D
 
 Nodemon watches the source files, so the server restarts automatically whenever you save a change in `src/`.
 
+---
+
+## Selz storefront
+
+The shop UI lives in `react-app`. Run it from that folder while the API is available:
+
+```bash
+cd react-app
+npm install
+npm run dev
+```
+
+Vite serves Selz at **http://localhost:5173**. In development, requests to `/api` are proxied to `https://e-commerce-techup-skills.onrender.com`, so the browser can call the API without a CORS change. The first call after the API has been idle can take about a minute.
+
+The home page and shop use a built-in grocery catalog: real product photos and typical 2026 Kigali shelf prices in Rwandan francs. Those shelves are not loaded from MongoDB.
+
+These screens call the API:
+
+| Screen | API |
+| --- | --- |
+| Register | `POST /api/auth/register` |
+| Sign in | `POST /api/auth/login` |
+| Forgot password | `POST /api/auth/forgot-password` |
+| Reset password | `POST /api/auth/reset-password` |
+| Catalog, after sign-in | `GET /api/products`, `/browse`, `/search`, `/stats`, and `GET`, `POST`, `PUT`, `DELETE` `/api/products/{id}` |
+
+The catalog sends the login JWT as `Authorization: Bearer <token>`. Creating a product sends `multipart/form-data` with the field name `image`. The cart on the shop pages stays in the browser.
+
 <details>
 <summary><strong>Setting up the project from scratch</strong></summary>
 
@@ -168,6 +200,7 @@ Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0
 
 ```text
 klab-techup-skills/
+├── react-app/                    # Selz storefront (React, Vite, Tailwind)
 ├── src/
 │   ├── config/
 │   │   ├── cloudinary.ts         # Cloudinary SDK configuration
@@ -412,6 +445,7 @@ This project is a learning foundation for backend development. Planned improveme
 - [x] Protect product routes with the JWT
 - [x] Product image upload, replace, and delete with Cloudinary
 - [x] Product search, filters, pagination, and category stats
+- [x] Selz storefront in `react-app` (shop catalog, auth, and signed-in product API)
 - [x] Deployed on Render at `https://e-commerce-techup-skills.onrender.com`
 - [ ] Additional API routes
 - [ ] Request validation

@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f4;
+  color: #14221f;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}

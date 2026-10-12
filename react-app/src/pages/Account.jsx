@@ -1,0 +1,31 @@
+import { Link, Navigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+
+export default function Account() {
+  const { user, logout } = useAuth()
+
+  if (!user) return <Navigate to="/login" replace />
+
+  return (
+    <div className="mx-auto max-w-lg rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+      <h1 className="text-3xl font-extrabold text-[#12312e]">Account</h1>
+      <p className="mt-4 text-lg font-semibold text-[#12312e]">{user.name}</p>
+      <p className="text-sm text-[#5d6b68]">{user.email}</p>
+      <div className="mt-6 flex flex-col gap-3">
+        <Link
+          to="/catalog"
+          className="rounded-2xl bg-[#0e4a45] px-4 py-3 text-center font-semibold text-white"
+        >
+          Manage products
+        </Link>
+        <button
+          type="button"
+          onClick={logout}
+          className="rounded-2xl border border-[#d7e0dc] px-4 py-3 font-semibold text-[#0e4a45]"
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
+  )
+}
