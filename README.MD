@@ -174,7 +174,13 @@ klab-techup-skills/
 │   │   └── db.ts                 # MongoDB connection
 │   ├── controller/
 │   │   ├── auth.controller.ts    # Register, login, password reset
-│   │   └── product.controller.ts
+│   │   ├── product.controller.ts
+│   │   └── product.query.controller.ts
+│   ├── utils/
+│   │   ├── pagination.helper.ts
+│   │   └── response.helper.ts
+│   ├── scripts/
+│   │   └── seed.ts               # Adds sample products without deleting data
 │   ├── services/
 │   │   └── emailService.ts       # Welcome and reset emails
 │   ├── templates/
@@ -226,6 +232,7 @@ app.listen(port, () => {
 | --- | --- |
 | `npm run dev` | Starts the development server with Nodemon and ts-node |
 | `npm start` | Starts the server the way Render does (`ts-node --transpile-only`) |
+| `npm run seed` | Inserts three sample products when those names are missing. Does not delete existing data. |
 | `npx tsc` | Compiles TypeScript to JavaScript according to `tsconfig.json` |
 
 ---
@@ -241,7 +248,10 @@ Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-
 | `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
 | `POST` | `/api/auth/forgot-password` | Email a 6-digit reset code that expires in 10 minutes. |
 | `POST` | `/api/auth/reset-password` | Set a new password with that code. |
-| `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. |
+| `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. A plain request returns the full array. Add `q`, `category`, `minPrice`, `maxPrice`, `sortBy`, `sortOrder`, `page`, or `limit` to search, filter, sort, and paginate together. |
+| `GET` | `/api/products/browse` | The paginated list, including the same filters. |
+| `GET` | `/api/products/search?q=` | Name search. Category, price, and sort parameters work on this route too. |
+| `GET` | `/api/products/stats` | Count and price summary for each category. |
 | `GET` | `/api/products/{id}` | Get one product. Requires a Bearer token. |
 | `POST` | `/api/products` | Create a product with `multipart/form-data`: `name`, `category`, `price`, and `image`. Requires a Bearer token. |
 | `PUT` | `/api/products/{id}` | Update a product with form-data. Include `image` only when replacing the picture. Requires a Bearer token. |
@@ -298,6 +308,18 @@ A successful create returns `201` and `Product created successfully`, including 
 
 `PUT /api/products/{id}` uses the same form-data. Leave `image` out to keep the current picture. `DELETE /api/products/{id}` removes the MongoDB document and the Cloudinary file.
 
+### Filtered product list
+
+A plain `GET /api/products` still returns every product as an array. Adding any of these query parameters switches that same route to `{ success, data, pagination }`:
+
+```text
+GET /api/products?q=nike&category=shoes&minPrice=10000&maxPrice=80000&sortBy=price&sortOrder=asc&page=1&limit=10
+```
+
+`q` matches the product name. `category` matches the whole category. `sortBy` is `name`, `price`, `category`, or `createdAt`. `/api/products/browse` and `/api/products/search` use the same filters. Search requires `q`. `/api/products/stats` returns one row per category with the count and the average, lowest, and highest price. All of these need a Bearer token.
+
+`npm run seed` inserts sample products named `Sample Nike Shoes`, `Sample Wireless Mouse`, and `Sample Notebook` only when those names are missing.
+
 ### `GET /`
 
 Returns a welcome message.
@@ -332,6 +354,8 @@ Hello World!
 4. Open the collection and click **Run**.
 
 The runner checks the welcome route, registers or finds a user, logs in, rejects a product request that has no token, then runs the product CRUD flow with the saved Bearer token.
+
+After **Login**, the **Products** folder can check the new list features. **List products** still expects the full array. **List products filtered**, **Browse products**, **Search products**, and **Product stats** need the saved token. Re-import the collection if those four requests are missing.
 
 To send one request by hand, use **GET** `https://e-commerce-techup-skills.onrender.com/` and expect `200 OK` with `Hello World!`.
 
@@ -387,6 +411,7 @@ This project is a learning foundation for backend development. Planned improveme
 - [x] Authentication middleware (`Authorization: Bearer <token>`)
 - [x] Protect product routes with the JWT
 - [x] Product image upload, replace, and delete with Cloudinary
+- [x] Product search, filters, pagination, and category stats
 - [x] Deployed on Render at `https://e-commerce-techup-skills.onrender.com`
 - [ ] Additional API routes
 - [ ] Request validation

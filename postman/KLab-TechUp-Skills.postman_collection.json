@@ -232,6 +232,38 @@
           ]
         },
         {
+          "name": "List products filtered",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products?q=sample&sortBy=price&sortOrder=asc&page=1&limit=10"
+          }
+        },
+        {
+          "name": "Browse products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/browse?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Search products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/search?q=nike"
+          }
+        },
+        {
+          "name": "Product stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/stats"
+          }
+        },
+        {
           "name": "Get product by id",
           "request": {
             "method": "GET",

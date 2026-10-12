@@ -39,7 +39,17 @@ export const openApiSpec = {
         tags: ["Products"],
         summary: "List products",
         security: [{ bearerAuth: [] }],
-        description: "Returns every product stored in MongoDB.",
+        description: "With no query string, returns every product as an array. Add `q`, `category`, `minPrice`, `maxPrice`, `sortBy`, `sortOrder`, `page`, or `limit` to search, filter, sort, and paginate in one request. The filtered response is `{ success, data, pagination }`.",
+        parameters: [
+          { name: "q", in: "query", schema: { type: "string" }, description: "Case-insensitive match on the product name" },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 10 } },
+          { name: "category", in: "query", schema: { type: "string" } },
+          { name: "minPrice", in: "query", schema: { type: "number" } },
+          { name: "maxPrice", in: "query", schema: { type: "number" } },
+          { name: "sortBy", in: "query", schema: { type: "string", enum: ["name", "price", "category", "createdAt"] } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
+        ],
         responses: {
           "200": {
             description: "Array of products",
@@ -85,6 +95,51 @@ export const openApiSpec = {
               },
             },
           },
+        },
+      },
+    },
+    "/api/products/search": {
+      get: {
+        tags: ["Products"],
+        summary: "Search products by name",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "q", in: "query", required: true, schema: { type: "string" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 10 } },
+        ],
+        responses: {
+          "200": { description: "Matching products" },
+          "400": { description: "Search query is required" },
+        },
+      },
+    },
+    "/api/products/stats": {
+      get: {
+        tags: ["Products"],
+        summary: "Product counts and prices by category",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": { description: "Category statistics" },
+        },
+      },
+    },
+    "/api/products/browse": {
+      get: {
+        tags: ["Products"],
+        summary: "Paginated, filtered, and sorted products",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 10 } },
+          { name: "category", in: "query", schema: { type: "string" } },
+          { name: "minPrice", in: "query", schema: { type: "number" } },
+          { name: "maxPrice", in: "query", schema: { type: "number" } },
+          { name: "sortBy", in: "query", schema: { type: "string", enum: ["name", "price", "category", "createdAt"] } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
+        ],
+        responses: {
+          "200": { description: "A page of products" },
         },
       },
     },

@@ -14,17 +14,20 @@ const productSchema = new Schema<IProduct>(
       type: String,
       required: true,
       trim: true,
+      index: true,
     },
 
     category: {
       type: String,
       required: true,
       trim: true,
+      index: true,
     },
 
     price: {
       type: Number,
       required: true,
+      index: true,
     },
 
     imageUrl: {
@@ -41,6 +44,9 @@ const productSchema = new Schema<IProduct>(
     timestamps: true,
   },
 );
+
+productSchema.index({ category: 1, price: 1 });
+productSchema.index({ name: "text" });
 
 const Product = mongoose.model<IProduct>("Product", productSchema);
 
