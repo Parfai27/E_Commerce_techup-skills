@@ -1,0 +1,11 @@
+{
+  "name": "klab-techup-skills",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "postinstall": "npm install --prefix node-app --ignore-scripts && npm install --include=dev --prefix react-app && npm run build --prefix react-app",
+    "start": "npm start --prefix node-app"
+  }
+}

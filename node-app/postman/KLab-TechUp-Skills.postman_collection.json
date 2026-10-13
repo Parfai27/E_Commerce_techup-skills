@@ -38,8 +38,9 @@
                   "pm.test('status is 200', function () {",
                   "  pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('body is Hello World!', function () {",
-                  "  pm.expect(pm.response.text()).to.eql('Hello World!');",
+                  "pm.test('body is the storefront or the API welcome', function () {",
+                  "  const text = pm.response.text();",
+                  "  pm.expect(text.includes('Selz') || text === 'Hello World!').to.be.true;",
                   "});"
                 ]
               }

@@ -2,7 +2,7 @@
 
 A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**, plus a React storefront named **Selz** in the sibling `react-app` folder. Both folders are in this repository. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT that includes the account role: `user` (buyer), `seller`, or `admin`. The register page always creates a buyer. An admin creates seller accounts. Every product route requires the token. Password reset sends a one-time code by email.
 
-**Live API:** [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com)
+**Live site:** [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com) serves the Selz storefront. The API is on that same host under `/api`.
 
 **API docs:** [https://e-commerce-techup-skills.onrender.com/api-docs](https://e-commerce-techup-skills.onrender.com/api-docs)
 
@@ -184,9 +184,9 @@ Render builds from `render.yaml` on the `main` branch:
 | Setting | Value |
 | --- | --- |
 | Service | `e-commerce-techup-skills` |
-| Root directory | `node-app` |
+| Root directory | repository root (leave this blank) |
 | Runtime | Node.js 22 |
-| Build | `npm install` |
+| Build | `npm install` (installs the API and builds Selz) |
 | Start | `npm start` |
 | Health check | `GET /` |
 
@@ -194,7 +194,9 @@ Set these environment variables in the Render dashboard. They are not stored in 
 
 `MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `SENDGRID_API_KEY`, `EMAIL_FROM`.
 
-Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0/0` so the hosted app can reach the database.
+Leave `PORT` unset. Render provides it. Leave the Root Directory blank so Render uses the repository root `package.json`, which installs the API and builds Selz. Atlas Network Access must allow `0.0.0.0/0` so the hosted app can reach the database.
+
+The built Selz app is served from `/`. Shop, account, and catalog pages are the React app. `/api` is the API, and `/api-docs` is Swagger. `GET /` returns `Hello World!` only when the Selz build is missing.
 
 ---
 
@@ -203,6 +205,7 @@ Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0
 ```text
 klab-techup-skills/
 ├── react-app/                        # Selz storefront (React, Vite, Tailwind)
+├── package.json                      # Installs the API and builds Selz for Render
 ├── render.yaml                       # Render web service definition
 └── node-app/
     ├── src/
@@ -279,7 +282,7 @@ Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/` | Welcome message |
+| `GET` | `/` | Selz storefront when the React app has been built. Otherwise the text `Hello World!`. |
 | `POST` | `/api/auth/register` | Create a buyer account. Any `role` in the body is ignored. Password is stored as a bcrypt hash. Sends a welcome email. |
 | `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. The token and `user` include `role`. |
 | `POST` | `/api/auth/sellers` | Admin only. Create a seller with `{ "name", "email", "password" }`. |
@@ -363,7 +366,7 @@ GET /api/products?q=nike&category=shoes&minPrice=10000&maxPrice=80000&sortBy=pri
 
 ### `GET /`
 
-Returns a welcome message.
+On Render, and locally after the Selz build, this returns the storefront HTML. If `react-app/dist` does not exist, it returns the text `Hello World!`.
 
 | Property | Value |
 | --- | --- |
@@ -372,18 +375,6 @@ Returns a welcome message.
 | Headers | None required |
 | Body | None |
 | Success status | `200 OK` |
-
-**Example request**
-
-```bash
-curl http://localhost:1000/
-```
-
-**Example response**
-
-```text
-Hello World!
-```
 
 ---
 
