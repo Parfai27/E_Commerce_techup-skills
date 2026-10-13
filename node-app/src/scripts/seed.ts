@@ -13,13 +13,6 @@ const samples = [
     imagePublicId: "seed-placeholder",
   },
   {
-    name: "Sample Wireless Mouse",
-    category: "Electronics",
-    price: 15000,
-    imageUrl: "https://res.cloudinary.com/demo/image/upload/sample.jpg",
-    imagePublicId: "seed-placeholder",
-  },
-  {
     name: "Sample Notebook",
     category: "Books",
     price: 8000,

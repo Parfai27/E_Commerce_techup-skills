@@ -255,7 +255,7 @@ export const openApiSpec = {
         properties: {
           _id: { type: "string", example: "66f1c2a4b8e4d21a0c1e9a11" },
           name: { type: "string", example: "I Phone 17 Pro" },
-          category: { type: "string", example: "Electronic" },
+          category: { type: "string", example: "Vegetables" },
           price: { type: "number", example: 8000 },
           imageUrl: {
             type: "string",
@@ -271,7 +271,7 @@ export const openApiSpec = {
         required: ["name", "category", "price", "image"],
         properties: {
           name: { type: "string", example: "Samsung Galaxy" },
-          category: { type: "string", example: "Electronic" },
+          category: { type: "string", example: "Vegetables" },
           price: { type: "number", example: 6500 },
           image: { type: "string", format: "binary" },
         },
@@ -280,7 +280,7 @@ export const openApiSpec = {
         type: "object",
         properties: {
           name: { type: "string", example: "I Phone 17 Pro" },
-          category: { type: "string", example: "Electronic" },
+          category: { type: "string", example: "Vegetables" },
           price: { type: "number", example: 7500 },
           image: { type: "string", format: "binary" },
         },

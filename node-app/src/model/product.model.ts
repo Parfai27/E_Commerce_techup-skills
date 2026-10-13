@@ -6,6 +6,7 @@ export interface IProduct extends Document {
   price: number;
   imageUrl: string;
   imagePublicId: string;
+  seller?: mongoose.Types.ObjectId;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -38,6 +39,11 @@ const productSchema = new Schema<IProduct>(
     imagePublicId: {
       type: String,
       required: true,
+    },
+
+    seller: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {

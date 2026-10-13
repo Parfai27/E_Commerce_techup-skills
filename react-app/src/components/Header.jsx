@@ -95,9 +95,14 @@ export default function Header() {
           <NavLink to="/shop" className="hover:text-[#0e4a45]" onClick={() => setOpen(false)}>
             Shop
           </NavLink>
-          {user && (
+          {(user?.role === "seller" || user?.role === "admin") && (
             <NavLink to="/catalog" className="hover:text-[#0e4a45]" onClick={() => setOpen(false)}>
               Catalog
+            </NavLink>
+          )}
+          {user?.role === "admin" && (
+            <NavLink to="/sellers" className="hover:text-[#0e4a45]" onClick={() => setOpen(false)}>
+              Sellers
             </NavLink>
           )}
           {categories.map((category) => (

@@ -6,18 +6,35 @@ export default function Account() {
 
   if (!user) return <Navigate to="/login" replace />
 
+  const roleLabel = user.role === "admin" ? "Admin" : user.role === "seller" ? "Seller" : "Buyer"
+  const canManage = user.role === "admin" || user.role === "seller"
+
   return (
     <div className="mx-auto max-w-lg rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
       <h1 className="text-3xl font-extrabold text-[#12312e]">Account</h1>
       <p className="mt-4 text-lg font-semibold text-[#12312e]">{user.name}</p>
       <p className="text-sm text-[#5d6b68]">{user.email}</p>
+      <p className="mt-1 text-sm font-semibold text-[#0e4a45]">{roleLabel}</p>
+      {user.role === "user" || !user.role ? (
+        <p className="mt-4 text-sm text-[#5d6b68]">You can shop and keep a cart. Sellers add products.</p>
+      ) : null}
       <div className="mt-6 flex flex-col gap-3">
-        <Link
-          to="/catalog"
-          className="rounded-2xl bg-[#0e4a45] px-4 py-3 text-center font-semibold text-white"
-        >
-          Manage products
-        </Link>
+        {canManage && (
+          <Link
+            to="/catalog"
+            className="rounded-2xl bg-[#0e4a45] px-4 py-3 text-center font-semibold text-white"
+          >
+            Manage products
+          </Link>
+        )}
+        {user.role === "admin" && (
+          <Link
+            to="/sellers"
+            className="rounded-2xl border border-[#d7e0dc] px-4 py-3 text-center font-semibold text-[#0e4a45]"
+          >
+            Create a seller
+          </Link>
+        )}
         <button
           type="button"
           onClick={logout}

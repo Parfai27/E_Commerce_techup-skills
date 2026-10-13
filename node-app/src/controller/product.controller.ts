@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Product from "../model/product.model";
 import cloudinary from "../config/cloudinary";
+import { getAuth } from "../middleware/auth.middleware";
+
+const ownsProduct = (seller: unknown, userId: string) =>
+  Boolean(seller) && String(seller) === userId;
 
 const readId = (id: string | string[] | undefined) => {
   if (typeof id === "string") return id;
@@ -35,7 +39,8 @@ const uploadToCloudinary = (
 
 export const getProduct = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find();
+    const auth = getAuth(req);
+    const products = await Product.find(auth.role === "seller" ? { seller: auth.userId } : {});
 
     return res.status(200).json(products);
   } catch (error) {
@@ -73,7 +78,10 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
-    const { name, category, price } = req.body ?? {};
+    const auth = getAuth(req);
+    const name = String(req.body?.name ?? "").trim();
+    const category = String(req.body?.category ?? "").trim();
+    const price = req.body?.price;
 
     if (!name || !category || !price) {
       return res.status(400).json({
@@ -95,6 +103,7 @@ export const addProduct = async (req: Request, res: Response) => {
       price,
       imageUrl: uploadResult.secure_url,
       imagePublicId: uploadResult.public_id,
+      seller: auth.userId,
     });
 
     return res.status(201).json({
@@ -128,7 +137,17 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
-    const { name, category, price } = req.body ?? {};
+    const auth = getAuth(req);
+
+    if (auth.role === "seller" && !ownsProduct(product.seller, auth.userId)) {
+      return res.status(403).json({
+        message: "You can only change products you added",
+      });
+    }
+
+    const name = req.body?.name ? String(req.body.name).trim() : "";
+    const category = req.body?.category ? String(req.body.category).trim() : "";
+    const { price } = req.body ?? {};
 
     if (req.file) {
       const uploadResult = await uploadToCloudinary(req.file.buffer);
@@ -178,7 +197,15 @@ export const deleteProduct = async (req: Request, res: Response) => {
       });
     }
 
-    if (product.imagePublicId) {
+    const auth = getAuth(req);
+
+    if (auth.role === "seller" && !ownsProduct(product.seller, auth.userId)) {
+      return res.status(403).json({
+        message: "You can only delete products you added",
+      });
+    }
+
+    if (product.imagePublicId && product.imagePublicId !== "seed-placeholder") {
       await cloudinary.uploader.destroy(product.imagePublicId);
     }
 

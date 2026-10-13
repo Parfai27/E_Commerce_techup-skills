@@ -12,10 +12,12 @@ function readUser() {
   }
 }
 
-async function postAuth(path, body) {
+async function postAuth(path, body, token) {
+  const headers = { "Content-Type": "application/json" }
+  if (token) headers.Authorization = `Bearer ${token}`
   const response = await fetch(path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   })
   const data = await response.json().catch(() => ({}))
@@ -57,6 +59,9 @@ export function AuthProvider({ children }) {
       },
       resetPassword(email, code, newPassword) {
         return postAuth("/api/auth/reset-password", { email, code, newPassword })
+      },
+      createSeller(name, email, password) {
+        return postAuth("/api/auth/sellers", { name, email, password }, token)
       },
       logout() {
         saveSession(null, null)

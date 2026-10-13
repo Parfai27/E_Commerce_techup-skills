@@ -7,9 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://e-commerce-techup-skills.onrender.com",
+        target: "http://localhost:1000",
         changeOrigin: true,
-        secure: true,
       },
     },
   },

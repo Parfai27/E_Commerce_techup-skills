@@ -1,6 +1,6 @@
 # KLab TechUp Skills — Express.js + TypeScript API
 
-A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**, plus a React storefront named **Selz** in `react-app`. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT, and every product route requires that token. Password reset sends a one-time code by email.
+A REST API built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**, plus a React storefront named **Selz** in the sibling `react-app` folder. Both folders are in this repository. Products are stored in MongoDB, and their images are stored on Cloudinary. Register and login issue a JWT that includes the account role: `user` (buyer), `seller`, or `admin`. The register page always creates a buyer. An admin creates seller accounts. Every product route requires the token. Password reset sends a one-time code by email.
 
 **Live API:** [https://e-commerce-techup-skills.onrender.com](https://e-commerce-techup-skills.onrender.com)
 
@@ -46,7 +46,7 @@ The service is hosted on [Render](https://render.com) (free plan). The first req
 | [Render](https://render.com/) | Hosts the live API |
 | [Postman](https://www.postman.com/) | API testing |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Interactive OpenAPI documentation |
-| [React](https://react.dev/) | Selz storefront in `react-app` |
+| [React](https://react.dev/) | Selz storefront in the sibling `react-app` folder |
 | [Vite](https://vite.dev/) | Dev server and production build for Selz |
 | [Tailwind CSS](https://tailwindcss.com/) | Selz layout and styling |
 
@@ -74,7 +74,7 @@ npm --version
 
 ```bash
 git clone https://github.com/Parfai27/E_Commerce_techup-skills.git
-cd klab-techup-skills
+cd E_Commerce_techup-skills/node-app
 ```
 
 ### 2. Install dependencies
@@ -126,15 +126,15 @@ Nodemon watches the source files, so the server restarts automatically whenever 
 
 ## Selz storefront
 
-The shop UI lives in `react-app`. Run it from that folder while the API is available:
+The shop UI lives in `react-app`, next to this API folder. Run it from that folder while the API is available:
 
 ```bash
-cd react-app
+cd ../react-app
 npm install
 npm run dev
 ```
 
-Vite serves Selz at **http://localhost:5173**. In development, requests to `/api` are proxied to `https://e-commerce-techup-skills.onrender.com`, so the browser can call the API without a CORS change. The first call after the API has been idle can take about a minute.
+Vite serves Selz at **http://localhost:5173**. In development, requests to `/api` are proxied to the API on `http://localhost:1000`, so start the API with `npm run dev` in this folder first. The browser can call the API without a CORS change.
 
 The home page and shop use a built-in grocery catalog: real product photos and typical 2026 Kigali shelf prices in Rwandan francs. Those shelves are not loaded from MongoDB.
 
@@ -142,13 +142,14 @@ These screens call the API:
 
 | Screen | API |
 | --- | --- |
-| Register | `POST /api/auth/register` |
-| Sign in | `POST /api/auth/login` |
+| Register | `POST /api/auth/register` — always creates a buyer. There is no role picker. |
+| Sign in | `POST /api/auth/login` — the token and user include `admin`, `seller`, or `user` |
 | Forgot password | `POST /api/auth/forgot-password` |
 | Reset password | `POST /api/auth/reset-password` |
-| Catalog, after sign-in | `GET /api/products`, `/browse`, `/search`, `/stats`, and `GET`, `POST`, `PUT`, `DELETE` `/api/products/{id}` |
+| Create a seller (admin only) | `POST /api/auth/sellers` |
+| Catalog (seller and admin) | `GET /api/products`, `/browse`, `/search`, `/stats`, and `GET`, `POST`, `PUT`, `DELETE` `/api/products/{id}` |
 
-The catalog sends the login JWT as `Authorization: Bearer <token>`. Creating a product sends `multipart/form-data` with the field name `image`. The cart on the shop pages stays in the browser.
+Buyers can shop and use the cart. Sellers add, edit, and delete their own products, and category is required on create. Admins can manage every product and create seller accounts. The catalog sends the login JWT as `Authorization: Bearer <token>`. Creating a product sends `multipart/form-data` with `name`, `category`, `price`, and an `image` field. The cart on the shop pages stays in the browser.
 
 <details>
 <summary><strong>Setting up the project from scratch</strong></summary>
@@ -183,6 +184,7 @@ Render builds from `render.yaml` on the `main` branch:
 | Setting | Value |
 | --- | --- |
 | Service | `e-commerce-techup-skills` |
+| Root directory | `node-app` |
 | Runtime | Node.js 22 |
 | Build | `npm install` |
 | Start | `npm start` |
@@ -200,42 +202,43 @@ Leave `PORT` unset. Render provides it. Atlas Network Access must allow `0.0.0.0
 
 ```text
 klab-techup-skills/
-├── react-app/                    # Selz storefront (React, Vite, Tailwind)
-├── src/
-│   ├── config/
-│   │   ├── cloudinary.ts         # Cloudinary SDK configuration
-│   │   └── db.ts                 # MongoDB connection
-│   ├── controller/
-│   │   ├── auth.controller.ts    # Register, login, password reset
-│   │   ├── product.controller.ts
-│   │   └── product.query.controller.ts
-│   ├── utils/
-│   │   ├── pagination.helper.ts
-│   │   └── response.helper.ts
-│   ├── scripts/
-│   │   └── seed.ts               # Adds sample products without deleting data
-│   ├── services/
-│   │   └── emailService.ts       # Welcome and reset emails
-│   ├── templates/
-│   │   └── welcome.template.ts   # Welcome email HTML
-│   ├── docs/
-│   │   └── openapi.ts            # OpenAPI document served by Swagger UI
-│   ├── middleware/
-│   │   ├── auth.middleware.ts    # Requires a Bearer JWT
-│   │   └── uploadMiddleware.ts   # Reads the product image into memory
-│   ├── model/
-│   │   ├── product.model.ts
-│   │   └── user.model.ts
-│   ├── router/
-│   │   ├── auth.router.ts
-│   │   └── product.router.ts
-│   └── server.ts                 # Application entry point
-├── .env                          # Local only. Never commit secrets
-├── render.yaml                   # Render web service definition
-├── package.json
-├── package-lock.json
-├── tsconfig.json
-└── README.md
+├── react-app/                        # Selz storefront (React, Vite, Tailwind)
+├── render.yaml                       # Render web service definition
+└── node-app/
+    ├── src/
+    │   ├── config/
+    │   │   ├── cloudinary.ts         # Cloudinary SDK configuration
+    │   │   └── db.ts                 # MongoDB connection
+    │   ├── controller/
+    │   │   ├── auth.controller.ts    # Register, login, password reset
+    │   │   ├── product.controller.ts
+    │   │   └── product.query.controller.ts
+    │   ├── utils/
+    │   │   ├── pagination.helper.ts
+    │   │   └── response.helper.ts
+    │   ├── scripts/
+    │   │   └── seed.ts               # Adds sample products without deleting data
+    │   ├── services/
+    │   │   └── emailService.ts       # Welcome and reset emails
+    │   ├── templates/
+    │   │   └── welcome.template.ts   # Welcome email HTML
+    │   ├── docs/
+    │   │   └── openapi.ts            # OpenAPI document served by Swagger UI
+    │   ├── middleware/
+    │   │   ├── auth.middleware.ts    # Requires a Bearer JWT
+    │   │   └── uploadMiddleware.ts   # Reads the product image into memory
+    │   ├── model/
+    │   │   ├── product.model.ts
+    │   │   └── user.model.ts
+    │   ├── router/
+    │   │   ├── auth.router.ts
+    │   │   └── product.router.ts
+    │   └── server.ts                 # Application entry point
+    ├── .env                          # Local only. Never commit secrets
+    ├── package.json
+    ├── package-lock.json
+    ├── tsconfig.json
+    └── README.MD
 ```
 
 Welcome (`GET /`) and the auth routes stay public. `authenticate` runs before every product route.
@@ -265,7 +268,7 @@ app.listen(port, () => {
 | --- | --- |
 | `npm run dev` | Starts the development server with Nodemon and ts-node |
 | `npm start` | Starts the server the way Render does (`ts-node --transpile-only`) |
-| `npm run seed` | Inserts three sample products when those names are missing. Does not delete existing data. |
+| `npm run seed` | Inserts sample shoes and a notebook when those names are missing. Does not delete existing data. |
 | `npx tsc` | Compiles TypeScript to JavaScript according to `tsconfig.json` |
 
 ---
@@ -277,8 +280,9 @@ Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/` | Welcome message |
-| `POST` | `/api/auth/register` | Create an account. Password is stored as a bcrypt hash. Sends a welcome email. |
-| `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. |
+| `POST` | `/api/auth/register` | Create a buyer account. Any `role` in the body is ignored. Password is stored as a bcrypt hash. Sends a welcome email. |
+| `POST` | `/api/auth/login` | Check the password and return a JWT that expires in 1 day. The token and `user` include `role`. |
+| `POST` | `/api/auth/sellers` | Admin only. Create a seller with `{ "name", "email", "password" }`. |
 | `POST` | `/api/auth/forgot-password` | Email a 6-digit reset code that expires in 10 minutes. |
 | `POST` | `/api/auth/reset-password` | Set a new password with that code. |
 | `GET` | `/api/products` | List products. Requires `Authorization: Bearer <token>`. A plain request returns the full array. Add `q`, `category`, `minPrice`, `maxPrice`, `sortBy`, `sortOrder`, `page`, or `limit` to search, filter, sort, and paginate together. |
@@ -286,9 +290,9 @@ Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-
 | `GET` | `/api/products/search?q=` | Name search. Category, price, and sort parameters work on this route too. |
 | `GET` | `/api/products/stats` | Count and price summary for each category. |
 | `GET` | `/api/products/{id}` | Get one product. Requires a Bearer token. |
-| `POST` | `/api/products` | Create a product with `multipart/form-data`: `name`, `category`, `price`, and `image`. Requires a Bearer token. |
-| `PUT` | `/api/products/{id}` | Update a product with form-data. Include `image` only when replacing the picture. Requires a Bearer token. |
-| `DELETE` | `/api/products/{id}` | Delete the product and its Cloudinary image. Requires a Bearer token. |
+| `POST` | `/api/products` | Seller or admin. Create a product with `multipart/form-data`: `name`, `category`, `price`, and `image`. Category is required. |
+| `PUT` | `/api/products/{id}` | Seller or admin. Update a product with form-data. Include `image` only when replacing the picture. A seller can change only products they added. |
+| `DELETE` | `/api/products/{id}` | Seller or admin. Delete the product and its Cloudinary image. A seller can delete only products they added. |
 
 ### `POST /api/auth/register`
 
@@ -299,7 +303,7 @@ Local docs: **http://localhost:1000/api-docs**. Live docs: **https://e-commerce-
 | Body | `{ "name", "email", "password" }` |
 | Success status | `201 Created` |
 
-The response includes `id`, `name`, and `email`. It does not include the password.
+The response includes `id`, `name`, `email`, and `role` (`user`). It does not include the password. Sending `"role": "admin"` or `"role": "seller"` does not change that.
 
 ### `POST /api/auth/login`
 
@@ -310,13 +314,17 @@ The response includes `id`, `name`, and `email`. It does not include the passwor
 | Body | `{ "email", "password" }` |
 | Success status | `200 OK` |
 
-The response includes `token` plus `id`, `name`, and `email`. Send that token on every product request:
+The response includes `token` plus `id`, `name`, `email`, and `role`. The token payload is `userId` and `role`. Send that token on every product request:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-A product request with no header returns `401` and `{ "message": "Authentication token is required" }`. A bad or expired token returns `401` and `{ "message": "Invalid or expired token" }`.
+A product request with no header returns `401` and `{ "message": "Authentication token is required" }`. A bad or expired token returns `401` and `{ "message": "Invalid or expired token" }`. A buyer who tries to create, update, or delete a product receives `403`.
+
+### `POST /api/auth/sellers`
+
+Admin only. Send `Authorization: Bearer <token>` and `{ "name", "email", "password" }`. The new account always has role `seller`. A buyer or seller who calls this route receives `403`.
 
 ### `POST /api/auth/forgot-password`
 
@@ -351,7 +359,7 @@ GET /api/products?q=nike&category=shoes&minPrice=10000&maxPrice=80000&sortBy=pri
 
 `q` matches the product name. `category` matches the whole category. `sortBy` is `name`, `price`, `category`, or `createdAt`. `/api/products/browse` and `/api/products/search` use the same filters. Search requires `q`. `/api/products/stats` returns one row per category with the count and the average, lowest, and highest price. All of these need a Bearer token.
 
-`npm run seed` inserts sample products named `Sample Nike Shoes`, `Sample Wireless Mouse`, and `Sample Notebook` only when those names are missing.
+`npm run seed` inserts sample products named `Sample Nike Shoes` and `Sample Notebook` only when those names are missing.
 
 ### `GET /`
 
@@ -445,7 +453,8 @@ This project is a learning foundation for backend development. Planned improveme
 - [x] Protect product routes with the JWT
 - [x] Product image upload, replace, and delete with Cloudinary
 - [x] Product search, filters, pagination, and category stats
-- [x] Selz storefront in `react-app` (shop catalog, auth, and signed-in product API)
+- [x] Selz storefront in the sibling `react-app` folder (shop catalog, auth, and signed-in product API)
+- [x] Roles: buyers shop, sellers manage their own products (category required), and admins create sellers and manage every product
 - [x] Deployed on Render at `https://e-commerce-techup-skills.onrender.com`
 - [ ] Additional API routes
 - [ ] Request validation

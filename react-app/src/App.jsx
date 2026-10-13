@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword"
 import ResetPassword from "./pages/ResetPassword"
 import Account from "./pages/Account"
 import Catalog from "./pages/Catalog"
+import Sellers from "./pages/Sellers"
 import Cart from "./pages/Cart"
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="reset-password" element={<ResetPassword />} />
           <Route path="account" element={<Account />} />
           <Route path="catalog" element={<Catalog />} />
+          <Route path="sellers" element={<Sellers />} />
         </Route>
       </Routes>
     </BrowserRouter>

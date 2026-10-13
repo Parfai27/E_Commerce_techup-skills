@@ -3,6 +3,7 @@ services:
     name: e-commerce-techup-skills
     runtime: node
     plan: free
+    rootDir: node-app
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /

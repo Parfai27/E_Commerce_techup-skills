@@ -19,7 +19,8 @@ function money(value) {
 }
 
 export default function Catalog() {
-  const { token, logout } = useAuth()
+  const { token, user, logout } = useAuth()
+  const canManage = user?.role === "admin" || user?.role === "seller"
   const [products, setProducts] = useState([])
   const [pagination, setPagination] = useState(null)
   const [stats, setStats] = useState([])
@@ -125,9 +126,15 @@ export default function Catalog() {
     setSaving(true)
     setError("")
     setNotice("")
+    const category = form.category.trim()
+    if (!category) {
+      setSaving(false)
+      setError("Category is required")
+      return
+    }
     const body = new FormData()
-    body.append("name", form.name)
-    body.append("category", form.category)
+    body.append("name", form.name.trim())
+    body.append("category", category)
     body.append("price", form.price)
     if (form.image) body.append("image", form.image)
 
@@ -170,6 +177,20 @@ export default function Catalog() {
         <p className="mt-2 text-sm text-[#5d6b68]">Sign in to use the product API.</p>
         <Link to="/login" className="mt-4 inline-block font-semibold text-[#0e4a45]">
           Sign in
+        </Link>
+      </div>
+    )
+  }
+
+  if (!canManage) {
+    return (
+      <div className="rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+        <h1 className="text-3xl font-extrabold text-[#12312e]">Product catalog</h1>
+        <p className="mt-2 text-sm text-[#5d6b68]">
+          Buyers can shop and use the cart. Adding products is for sellers.
+        </p>
+        <Link to="/shop" className="mt-4 inline-block font-semibold text-[#0e4a45]">
+          Back to the shop
         </Link>
       </div>
     )
@@ -286,6 +307,7 @@ export default function Catalog() {
             required
             value={form.category}
             onChange={(event) => setForm({ ...form, category: event.target.value })}
+            placeholder="Vegetables, Fruit, Dairy..."
             className={fieldClass}
           />
         </label>

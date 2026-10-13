@@ -2,10 +2,17 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { User } from "../model/user.model";
+import { User, UserRole } from "../model/user.model";
 import {sendResetCodeEmail, sendWelcomeEmail } from "../services/emailService";
 
 const hashCode = (code: string) => crypto.createHash("sha256").update(code).digest("hex");
+
+const publicUser = (user: { _id: unknown; name: string; email: string; role?: UserRole }) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role ?? "user",
+});
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -31,6 +38,7 @@ export const register = async (req: Request, res: Response) => {
       name,
       email,
       password: hashedPassword,
+      role: "user",
     });
      
     try {
@@ -39,21 +47,13 @@ export const register = async (req: Request, res: Response) => {
       console.error("Error sending welcome email:\n", error);
       return res.status(201).json({
         message: "User registered successfully, but the welcome email could not be sent",
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-        },
+        user: publicUser(user),
       });
     }
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: publicUser(user),
     });
   } catch (error) {
     return res.status(500).json({
@@ -88,9 +88,12 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    const role = user.role ?? "user";
+
     const token = jwt.sign(
       {
         userId: user._id,
+        role,
       },
       process.env.JWT_SECRET as string,
       {
@@ -101,11 +104,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: publicUser(user),
     });
   } catch (error) {
     return res.status(500).json({
@@ -167,4 +166,51 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   res.status(200).json({ message: "Password reset successful" });
 
+};
+
+export const createSeller = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body ?? {};
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: "seller",
+    });
+
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (error) {
+      console.error("Error sending welcome email:\n", error);
+      return res.status(201).json({
+        message: "Seller created, but the welcome email could not be sent",
+        user: publicUser(user),
+      });
+    }
+
+    return res.status(201).json({
+      message: "Seller created successfully",
+      user: publicUser(user),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
 };

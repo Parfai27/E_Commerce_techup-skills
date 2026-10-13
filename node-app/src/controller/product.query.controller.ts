@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { SortOrder } from "mongoose";
+import mongoose, { SortOrder } from "mongoose";
 import { getProduct } from "./product.controller";
 import Product from "../model/product.model";
+import { getAuth } from "../middleware/auth.middleware";
 import { getPaginationParams } from "../utils/pagination.helper";
 import { errorResponse, successResponse } from "../utils/response.helper";
 
@@ -28,11 +29,13 @@ const queryProducts = async (req: Request, res: Response) => {
   const sortOrder: SortOrder = readQuery(req.query.sortOrder) === "asc" ? 1 : -1;
   const sortField = sortableFields.find((field) => field === sortBy) ?? "createdAt";
 
+  const auth = getAuth(req);
   const filter: {
     category?: RegExp;
     name?: { $regex: string; $options: string };
     price?: { $gte?: number; $lte?: number };
-  } = {};
+    seller?: string;
+  } = auth.role === "seller" && auth.userId ? { seller: auth.userId } : {};
 
   if (query) {
     filter.name = { $regex: escapeRegex(query), $options: "i" };
@@ -105,9 +108,13 @@ export const searchProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const getProductStats = async (_req: Request, res: Response) => {
+export const getProductStats = async (req: Request, res: Response) => {
   try {
+    const auth = getAuth(req);
     const stats = await Product.aggregate([
+      ...(auth.role === "seller" && mongoose.Types.ObjectId.isValid(auth.userId)
+        ? [{ $match: { seller: new mongoose.Types.ObjectId(auth.userId) } }]
+        : []),
       {
         $group: {
           _id: "$category",
