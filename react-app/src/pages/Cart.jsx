@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom"
+import { Link, Navigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
 import { formatRwf } from "../lib/money"
 
 export default function Cart() {
+  const { user } = useAuth()
   const { lines, total, setQty, remove } = useCart()
+
+  if (user?.role === "seller" || user?.role === "admin") {
+    return <Navigate to="/catalog" replace />
+  }
 
   if (lines.length === 0) {
     return (

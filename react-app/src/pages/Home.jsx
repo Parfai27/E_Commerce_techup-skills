@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom"
 import HeroSlider from "../components/HeroSlider"
 import ProductCard from "../components/ProductCard"
-import { categories, categoryCount, products } from "../data/products"
-
-const highlights = products.slice(0, 8)
+import { useShelf } from "../context/ShelfContext"
 
 export default function Home() {
+  const { products, added, categories, categoryCount } = useShelf()
+  const highlights = [...added, ...products.filter((product) => !added.some((item) => item.id === product.id))].slice(0, 8)
   return (
     <div className="space-y-12">
       <section className="grid overflow-hidden rounded-[2rem] bg-[#0e4a45] text-white lg:grid-cols-2">
@@ -55,7 +55,7 @@ export default function Home() {
                 className="rounded-3xl bg-white p-3 text-center shadow-sm ring-1 ring-black/5"
               >
                 <img
-                  src={sample.image}
+                  src={sample?.image}
                   alt=""
                   className="mx-auto h-20 w-20 rounded-full object-cover"
                 />

@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
 import { formatRwf } from "../lib/money"
 
 export default function ProductCard({ product }) {
+  const { user } = useAuth()
   const { add } = useCart()
+  const staff = user?.role === "seller" || user?.role === "admin"
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
@@ -25,16 +28,18 @@ export default function ProductCard({ product }) {
           >
             {product.name}
           </Link>
-          <p className="text-sm text-[#5d6b68]">{product.unit}</p>
+          {product.unit ? <p className="text-sm text-[#5d6b68]">{product.unit}</p> : null}
         </div>
         <p className="text-xl font-bold text-[#0e4a45]">{formatRwf(product.price)}</p>
-        <button
-          type="button"
-          onClick={() => add(product.id)}
-          className="mt-auto w-full rounded-2xl bg-[#0e4a45] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0a3330]"
-        >
-          Add to cart
-        </button>
+        {staff ? null : (
+          <button
+            type="button"
+            onClick={() => add(product.id)}
+            className="mt-auto w-full rounded-2xl bg-[#0e4a45] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0a3330]"
+          >
+            Add to cart
+          </button>
+        )}
       </div>
     </article>
   )

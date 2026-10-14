@@ -1,13 +1,16 @@
 import { useState } from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
-import { categories } from "../data/products"
 import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
+import { useShelf } from "../context/ShelfContext"
 
 export default function Header() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { count } = useCart()
+  const { categories } = useShelf()
+  const staff = user?.role === "seller" || user?.role === "admin"
+  const showSearch = user?.role !== "admin"
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
 
@@ -25,7 +28,7 @@ export default function Header() {
           <Link to="/" className="text-3xl font-extrabold tracking-tight text-[#0e4a45]">
             Selz
           </Link>
-          <form onSubmit={onSearch} className="hidden min-w-0 flex-1 md:block">
+          {showSearch && <form onSubmit={onSearch} className="hidden min-w-0 flex-1 md:block">
             <label className="sr-only" htmlFor="search">
               Search products
             </label>
@@ -41,7 +44,7 @@ export default function Header() {
                 Search
               </button>
             </div>
-          </form>
+          </form>}
           <div className="ml-auto flex items-center gap-2">
             {user ? (
               <Link
@@ -58,12 +61,21 @@ export default function Header() {
                 Account
               </Link>
             )}
-            <Link
-              to="/cart"
-              className="rounded-full bg-[#0e4a45] px-4 py-2 text-sm font-semibold text-white"
-            >
-              Cart {count}
-            </Link>
+            {staff ? (
+              <Link
+                to={user.role === "admin" ? "/sellers" : "/catalog"}
+                className="rounded-full bg-[#0e4a45] px-4 py-2 text-sm font-semibold text-white"
+              >
+                {user.role === "admin" ? "Sellers" : "My products"}
+              </Link>
+            ) : (
+              <Link
+                to="/cart"
+                className="rounded-full bg-[#0e4a45] px-4 py-2 text-sm font-semibold text-white"
+              >
+                Cart {count}
+              </Link>
+            )}
             <button
               type="button"
               className="rounded-full border border-[#d7e0dc] px-3 py-2 text-sm font-semibold md:hidden"
@@ -73,7 +85,7 @@ export default function Header() {
             </button>
           </div>
         </div>
-        <form onSubmit={onSearch} className="px-4 pb-3 md:hidden">
+        {showSearch && <form onSubmit={onSearch} className="px-4 pb-3 md:hidden">
           <div className="flex overflow-hidden rounded-full border border-[#d7e0dc] bg-[#f7f8f6] focus-within:border-[#0e4a45]">
             <input
               value={query}
@@ -85,7 +97,7 @@ export default function Header() {
               Search
             </button>
           </div>
-        </form>
+        </form>}
       </div>
       <nav className={`${open ? "block" : "hidden"} border-b border-black/5 md:block`}>
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 text-sm font-semibold text-[#12312e] md:flex-row md:items-center md:gap-6">
@@ -95,9 +107,9 @@ export default function Header() {
           <NavLink to="/shop" className="hover:text-[#0e4a45]" onClick={() => setOpen(false)}>
             Shop
           </NavLink>
-          {(user?.role === "seller" || user?.role === "admin") && (
+          {user?.role === "seller" && (
             <NavLink to="/catalog" className="hover:text-[#0e4a45]" onClick={() => setOpen(false)}>
-              Catalog
+              My products
             </NavLink>
           )}
           {user?.role === "admin" && (
@@ -105,7 +117,7 @@ export default function Header() {
               Sellers
             </NavLink>
           )}
-          {categories.map((category) => (
+          {!staff && categories.map((category) => (
             <Link
               key={category}
               to={`/shop?category=${encodeURIComponent(category)}`}

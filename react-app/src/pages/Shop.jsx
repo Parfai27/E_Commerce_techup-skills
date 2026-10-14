@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
-import { categories, products } from "../data/products"
+import { useShelf } from "../context/ShelfContext"
 
 const PAGE_SIZE = 8
 
@@ -14,6 +14,7 @@ function updateParam(params, key, value) {
 }
 
 export default function Shop() {
+  const { products, categories } = useShelf()
   const [params, setParams] = useSearchParams()
   const q = params.get("q") || ""
   const category = params.get("category") || ""
@@ -42,7 +43,7 @@ export default function Shop() {
       return a.name.localeCompare(b.name)
     })
     return matched
-  }, [q, category, min, max, sort])
+  }, [products, q, category, min, max, sort])
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)

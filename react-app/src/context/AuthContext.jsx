@@ -63,6 +63,23 @@ export function AuthProvider({ children }) {
       createSeller(name, email, password) {
         return postAuth("/api/auth/sellers", { name, email, password }, token)
       },
+      async listSellers() {
+        const response = await fetch("/api/auth/sellers", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.message || "Could not load sellers")
+        return data.sellers || []
+      },
+      async deleteSeller(id) {
+        const response = await fetch(`/api/auth/sellers/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.message || "Could not remove the seller")
+        return data
+      },
       logout() {
         saveSession(null, null)
       },

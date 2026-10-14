@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react"
-import { getProduct } from "../data/products"
+import { useShelf } from "./ShelfContext"
 
 const CartContext = createContext(null)
 const CART_KEY = "selz_cart"
@@ -14,6 +14,7 @@ function readCart() {
 }
 
 export function CartProvider({ children }) {
+  const { getProduct } = useShelf()
   const [lines, setLines] = useState(readCart)
 
   function write(next) {
@@ -57,7 +58,7 @@ export function CartProvider({ children }) {
         write([])
       },
     }
-  }, [lines])
+  }, [lines, getProduct])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

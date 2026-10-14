@@ -1,15 +1,35 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, Navigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useShelf } from "../context/ShelfContext"
 
 const fieldClass = "mt-1 w-full rounded-xl border border-[#d7e0dc] px-3 py-2 font-normal"
 
 export default function Sellers() {
-  const { user, createSeller } = useAuth()
+  const { user, createSeller, listSellers, deleteSeller } = useAuth()
+  const { reload } = useShelf()
+  const [sellers, setSellers] = useState([])
   const [form, setForm] = useState({ name: "", email: "", password: "" })
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  async function load() {
+    setLoading(true)
+    setError("")
+    try {
+      setSellers(await listSellers())
+    } catch (err) {
+      setError(err.message || "Could not load sellers")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (user?.role === "admin") load()
+  }, [user?.role])
 
   if (!user) return <Navigate to="/login" replace />
   if (user.role !== "admin") return <Navigate to="/account" replace />
@@ -23,6 +43,7 @@ export default function Sellers() {
       const data = await createSeller(form.name, form.email, form.password)
       setNotice(data.message || "Seller created")
       setForm({ name: "", email: "", password: "" })
+      await load()
     } catch (err) {
       setError(err.message || "Could not create the seller")
     } finally {
@@ -30,13 +51,55 @@ export default function Sellers() {
     }
   }
 
+  async function remove(seller) {
+    const confirmed = window.confirm(`Remove ${seller.name}? Their products will leave the shop.`)
+    if (!confirmed) return
+    setNotice("")
+    setError("")
+    try {
+      const data = await deleteSeller(seller._id)
+      setNotice(data.message || "Seller removed")
+      await reload()
+      await load()
+    } catch (err) {
+      setError(err.message || "Could not remove the seller")
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-lg rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
-      <h1 className="text-3xl font-extrabold text-[#12312e]">Create a seller</h1>
-      <p className="mt-2 text-sm text-[#5d6b68]">
-        New accounts from the register page stay buyers. Only an admin can add a seller.
-      </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <section>
+        <h1 className="text-3xl font-extrabold text-[#12312e]">Sellers</h1>
+        <p className="mt-2 text-sm text-[#5d6b68]">
+          Add a seller, or remove one. Removing a seller also removes the products they added.
+        </p>
+        {loading && <p className="mt-4 text-sm text-[#5d6b68]">Loading sellers...</p>}
+        {!loading && sellers.length === 0 && (
+          <p className="mt-4 rounded-3xl bg-white p-6 text-sm text-[#5d6b68]">No sellers yet.</p>
+        )}
+        <div className="mt-4 space-y-3">
+          {sellers.map((seller) => (
+            <article key={seller._id} className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-[#12312e]">{seller.name}</p>
+                <p className="text-sm text-[#5d6b68]">{seller.email}</p>
+              </div>
+              <button type="button" onClick={() => remove(seller)} className="text-sm font-semibold text-[#8a3b32]">
+                Delete
+              </button>
+            </article>
+          ))}
+        </div>
+        {notice && <p className="mt-4 text-sm font-semibold text-[#0e4a45]">{notice}</p>}
+        {error && <p className="mt-4 text-sm font-semibold text-red-700">{error}</p>}
+        <Link to="/account" className="mt-6 inline-block text-sm font-semibold text-[#0e4a45]">
+          Back to account
+        </Link>
+      </section>
+
+      <form onSubmit={onSubmit} className="h-fit space-y-4 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5">
+        <h2 className="text-2xl font-extrabold text-[#12312e]">Add a seller</h2>
+        <p className="text-sm text-[#5d6b68]">Register stays for buyers. Only you can create a seller.</p>
         <label className="block text-sm font-semibold">
           Name
           <input
@@ -74,11 +137,6 @@ export default function Sellers() {
           {saving ? "Creating..." : "Create seller"}
         </button>
       </form>
-      {notice && <p className="mt-4 text-sm font-semibold text-[#0e4a45]">{notice}</p>}
-      {error && <p className="mt-4 text-sm font-semibold text-red-700">{error}</p>}
-      <Link to="/account" className="mt-6 inline-block text-sm font-semibold text-[#0e4a45]">
-        Back to account
-      </Link>
     </div>
   )
 }

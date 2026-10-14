@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom"
-import { categories } from "../data/products"
+import { useAuth } from "../context/AuthContext"
+import { useShelf } from "../context/ShelfContext"
 
 export default function Footer() {
+  const { user } = useAuth()
+  const { categories } = useShelf()
+  const staff = user?.role === "seller" || user?.role === "admin"
   return (
     <footer className="mt-16 bg-[#0e4a45] text-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
@@ -26,26 +30,43 @@ export default function Footer() {
         <div>
           <p className="font-semibold">Account</p>
           <ul className="mt-3 space-y-2 text-sm text-white/80">
-            <li>
-              <Link to="/login" className="hover:text-white">
-                Sign in
-              </Link>
-            </li>
-            <li>
-              <Link to="/register" className="hover:text-white">
-                Create an account
-              </Link>
-            </li>
-            <li>
-              <Link to="/forgot-password" className="hover:text-white">
-                Forgot password
-              </Link>
-            </li>
-            <li>
-              <Link to="/cart" className="hover:text-white">
-                Cart
-              </Link>
-            </li>
+            {staff ? (
+              <>
+                <li>
+                  <Link to="/account" className="hover:text-white">
+                    Account
+                  </Link>
+                </li>
+                <li>
+                  <Link to={user.role === "admin" ? "/sellers" : "/catalog"} className="hover:text-white">
+                    {user.role === "admin" ? "Sellers" : "My products"}
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="/login" className="hover:text-white">
+                    Sign in
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/register" className="hover:text-white">
+                    Create an account
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/forgot-password" className="hover:text-white">
+                    Forgot password
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cart" className="hover:text-white">
+                    Cart
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>

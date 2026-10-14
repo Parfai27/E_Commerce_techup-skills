@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { User, UserRole } from "../model/user.model";
+import Product from "../model/product.model";
+import cloudinary from "../config/cloudinary";
 import {sendResetCodeEmail, sendWelcomeEmail } from "../services/emailService";
 
 const hashCode = (code: string) => crypto.createHash("sha256").update(code).digest("hex");
@@ -207,6 +210,64 @@ export const createSeller = async (req: Request, res: Response) => {
     return res.status(201).json({
       message: "Seller created successfully",
       user: publicUser(user),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+export const listSellers = async (_req: Request, res: Response) => {
+  try {
+    const sellers = await User.find({ role: "seller" })
+      .select("name email role createdAt")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ sellers });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+export const deleteSeller = async (req: Request, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        message: "Seller not found",
+      });
+    }
+
+    const seller = await User.findById(id);
+
+    if (!seller || seller.role !== "seller") {
+      return res.status(404).json({
+        message: "Seller not found",
+      });
+    }
+
+    const products = await Product.find({ seller: seller._id });
+
+    for (const product of products) {
+      if (product.imagePublicId && product.imagePublicId !== "seed-placeholder") {
+        try {
+          await cloudinary.uploader.destroy(product.imagePublicId);
+        } catch (error) {
+          console.error("Could not remove a seller product image");
+        }
+      }
+    }
+
+    await Product.deleteMany({ seller: seller._id });
+    await seller.deleteOne();
+
+    return res.status(200).json({
+      message: "Seller removed",
     });
   } catch (error) {
     return res.status(500).json({
