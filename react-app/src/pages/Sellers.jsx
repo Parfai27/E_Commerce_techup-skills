@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { Link, Navigate } from "react-router-dom"
+import FieldMessage from "../components/FieldMessage"
 import { useAuth } from "../context/AuthContext"
 import { useShelf } from "../context/ShelfContext"
+import { sellerSchema } from "../lib/schemas"
 
 const fieldClass = "mt-1 w-full rounded-xl border border-[#d7e0dc] px-3 py-2 font-normal"
 
@@ -9,11 +13,18 @@ export default function Sellers() {
   const { user, createSeller, listSellers, deleteSeller } = useAuth()
   const { reload } = useShelf()
   const [sellers, setSellers] = useState([])
-  const [form, setForm] = useState({ name: "", email: "", password: "" })
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(sellerSchema),
+    defaultValues: { name: "", email: "", password: "" },
+  })
 
   async function load() {
     setLoading(true)
@@ -34,20 +45,16 @@ export default function Sellers() {
   if (!user) return <Navigate to="/login" replace />
   if (user.role !== "admin") return <Navigate to="/account" replace />
 
-  async function onSubmit(event) {
-    event.preventDefault()
-    setSaving(true)
+  async function onSubmit(values) {
     setNotice("")
     setError("")
     try {
-      const data = await createSeller(form.name, form.email, form.password)
+      const data = await createSeller(values.name, values.email, values.password)
       setNotice(data.message || "Seller created")
-      setForm({ name: "", email: "", password: "" })
+      reset({ name: "", email: "", password: "" })
       await load()
     } catch (err) {
       setError(err.message || "Could not create the seller")
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -70,9 +77,6 @@ export default function Sellers() {
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
       <section>
         <h1 className="text-3xl font-extrabold text-[#12312e]">Sellers</h1>
-        <p className="mt-2 text-sm text-[#5d6b68]">
-          Add a seller, or remove one. Removing a seller also removes the products they added.
-        </p>
         {loading && <p className="mt-4 text-sm text-[#5d6b68]">Loading sellers...</p>}
         {!loading && sellers.length === 0 && (
           <p className="mt-4 rounded-3xl bg-white p-6 text-sm text-[#5d6b68]">No sellers yet.</p>
@@ -97,44 +101,29 @@ export default function Sellers() {
         </Link>
       </section>
 
-      <form onSubmit={onSubmit} className="h-fit space-y-4 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5">
+      <form onSubmit={handleSubmit(onSubmit)} className="h-fit space-y-4 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5" noValidate>
         <h2 className="text-2xl font-extrabold text-[#12312e]">Add a seller</h2>
-        <p className="text-sm text-[#5d6b68]">Register stays for buyers. Only you can create a seller.</p>
         <label className="block text-sm font-semibold">
           Name
-          <input
-            required
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-            className={fieldClass}
-          />
+          <input className={fieldClass} {...register("name")} />
+          <FieldMessage error={errors.name} />
         </label>
         <label className="block text-sm font-semibold">
           Email
-          <input
-            required
-            type="email"
-            value={form.email}
-            onChange={(event) => setForm({ ...form, email: event.target.value })}
-            className={fieldClass}
-          />
+          <input type="email" className={fieldClass} {...register("email")} />
+          <FieldMessage error={errors.email} />
         </label>
         <label className="block text-sm font-semibold">
           Password
-          <input
-            required
-            type="password"
-            value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })}
-            className={fieldClass}
-          />
+          <input type="password" className={fieldClass} {...register("password")} />
+          <FieldMessage error={errors.password} />
         </label>
         <button
           type="submit"
-          disabled={saving}
+          disabled={isSubmitting}
           className="w-full rounded-2xl bg-[#0e4a45] px-4 py-3 font-semibold text-white disabled:opacity-60"
         >
-          {saving ? "Creating..." : "Create seller"}
+          {isSubmitting ? "Creating..." : "Create seller"}
         </button>
       </form>
     </div>

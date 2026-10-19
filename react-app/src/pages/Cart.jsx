@@ -25,7 +25,6 @@ export default function Cart() {
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-[#12312e]">Cart</h1>
-      <p className="mt-2 text-sm text-[#5d6b68]">Saved in this browser.</p>
       <ul className="mt-6 space-y-4">
         {lines.map((line) => (
           <li

@@ -81,11 +81,12 @@ export const addProduct = async (req: Request, res: Response) => {
     const auth = getAuth(req);
     const name = String(req.body?.name ?? "").trim();
     const category = String(req.body?.category ?? "").trim();
+    const unit = String(req.body?.unit ?? "").trim();
     const price = req.body?.price;
 
-    if (!name || !category || !price) {
+    if (!name || !category || !unit || !price) {
       return res.status(400).json({
-        message: "Name, category and price are required",
+        message: "Name, category, unit and price are required",
       });
     }
 
@@ -100,6 +101,7 @@ export const addProduct = async (req: Request, res: Response) => {
     const product = await Product.create({
       name,
       category,
+      unit,
       price,
       imageUrl: uploadResult.secure_url,
       imagePublicId: uploadResult.public_id,
@@ -147,6 +149,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     const name = req.body?.name ? String(req.body.name).trim() : "";
     const category = req.body?.category ? String(req.body.category).trim() : "";
+    const unit = req.body?.unit ? String(req.body.unit).trim() : "";
     const { price } = req.body ?? {};
 
     if (req.file) {
@@ -162,6 +165,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     if (name) product.name = name;
     if (category) product.category = category;
+    if (unit) product.unit = unit;
     if (price) product.price = price;
 
     await product.save();

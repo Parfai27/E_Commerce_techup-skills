@@ -11,9 +11,6 @@ export default function Account() {
       <h1 className="text-3xl font-extrabold text-[#12312e]">Account</h1>
       <p className="mt-4 text-lg font-semibold text-[#12312e]">{user.name}</p>
       <p className="text-sm text-[#5d6b68]">{user.email}</p>
-      {user.role === "user" || !user.role ? (
-        <p className="mt-4 text-sm text-[#5d6b68]">You can shop and keep a cart. Sellers add products.</p>
-      ) : null}
       <div className="mt-6 flex flex-col gap-3">
         {user.role === "seller" && (
           <Link

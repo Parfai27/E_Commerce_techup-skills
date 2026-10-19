@@ -1,25 +1,33 @@
 import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
+import FieldMessage from "../components/FieldMessage"
 import { useAuth } from "../context/AuthContext"
+import { forgotPasswordSchema } from "../lib/schemas"
+
+const fieldClass = "mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  })
 
-  async function onSubmit(event) {
-    event.preventDefault()
-    const email = String(new FormData(event.currentTarget).get("email") || "")
+  async function onSubmit(values) {
     setError("")
-    setPending(true)
     try {
-      const result = await forgotPassword(email)
-      navigate("/reset-password", { state: { email, message: result.message } })
+      const result = await forgotPassword(values.email)
+      navigate("/reset-password", { state: { email: values.email, message: result.message } })
     } catch (err) {
       setError(err.message || "Could not send a reset code")
-    } finally {
-      setPending(false)
     }
   }
 
@@ -29,24 +37,19 @@ export default function ForgotPassword() {
       <p className="mt-2 text-sm text-[#5d6b68]">
         We email a 6-digit code if this address has a Selz account.
       </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
         <label className="block text-sm font-semibold">
           Email
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
-          />
+          <input type="email" autoComplete="email" className={fieldClass} {...register("email")} />
+          <FieldMessage error={errors.email} />
         </label>
         {error && <p className="text-sm font-semibold text-red-700">{error}</p>}
         <button
           type="submit"
-          disabled={pending}
+          disabled={isSubmitting}
           className="w-full rounded-2xl bg-[#0e4a45] py-3 font-semibold text-white disabled:opacity-60"
         >
-          {pending ? "Sending code..." : "Send reset code"}
+          {isSubmitting ? "Sending code..." : "Send reset code"}
         </button>
       </form>
       <p className="mt-4 text-sm text-[#5d6b68]">

@@ -13,7 +13,7 @@ function toShelfProduct(record) {
   return {
     id: String(record._id),
     name: String(record.name || "").trim(),
-    unit: "",
+    unit: String(record.unit || "").trim(),
     category: knownCategory(record.category),
     price: Number(record.price) || 0,
     image: record.imageUrl,

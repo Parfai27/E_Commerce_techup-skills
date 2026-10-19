@@ -17,8 +17,7 @@ export default function Home() {
             Everyday shopping, priced like the market.
           </h1>
           <p className="max-w-md text-white/80">
-            Fruit, vegetables, dairy, and pantry staples with the prices you
-            actually see in Kigali shops.
+            Fruit, vegetables, dairy, and pantry staples with the lowest prices like in shops.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link

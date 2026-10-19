@@ -1,30 +1,38 @@
 import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import FieldMessage from "../components/FieldMessage"
 import { useAuth } from "../context/AuthContext"
+import { resetPasswordSchema } from "../lib/schemas"
+
+const fieldClass = "mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
 
 export default function ResetPassword() {
   const { resetPassword } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: location.state?.email || "",
+      code: "",
+      newPassword: "",
+    },
+  })
 
-  async function onSubmit(event) {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
+  async function onSubmit(values) {
     setError("")
-    setPending(true)
     try {
-      const result = await resetPassword(
-        String(data.get("email") || ""),
-        String(data.get("code") || ""),
-        String(data.get("newPassword") || ""),
-      )
+      const result = await resetPassword(values.email, values.code, values.newPassword)
       navigate("/login", { state: { message: result.message } })
     } catch (err) {
       setError(err.message || "Could not reset the password")
-    } finally {
-      setPending(false)
     }
   }
 
@@ -34,46 +42,29 @@ export default function ResetPassword() {
       <p className="mt-2 text-sm text-[#5d6b68]">
         {location.state?.message || "Use the code from your email. It expires in 10 minutes."}
       </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
         <label className="block text-sm font-semibold">
           Email
-          <input
-            name="email"
-            type="email"
-            required
-            defaultValue={location.state?.email || ""}
-            autoComplete="email"
-            className="mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
-          />
+          <input type="email" autoComplete="email" className={fieldClass} {...register("email")} />
+          <FieldMessage error={errors.email} />
         </label>
         <label className="block text-sm font-semibold">
           Code
-          <input
-            name="code"
-            inputMode="numeric"
-            required
-            autoComplete="one-time-code"
-            className="mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
-          />
+          <input inputMode="numeric" autoComplete="one-time-code" className={fieldClass} {...register("code")} />
+          <FieldMessage error={errors.code} />
         </label>
         <label className="block text-sm font-semibold">
           New password
-          <input
-            name="newPassword"
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            className="mt-1 w-full rounded-2xl border border-[#d7e0dc] px-4 py-3 font-normal"
-          />
+          <input type="password" autoComplete="new-password" className={fieldClass} {...register("newPassword")} />
+          <FieldMessage error={errors.newPassword} />
         </label>
         {error && <p className="text-sm font-semibold text-red-700">{error}</p>}
         <button
           type="submit"
-          disabled={pending}
+          disabled={isSubmitting}
           className="w-full rounded-2xl bg-[#0e4a45] py-3 font-semibold text-white disabled:opacity-60"
         >
-          {pending ? "Saving..." : "Save new password"}
+          {isSubmitting ? "Saving..." : "Save new password"}
         </button>
       </form>
       <p className="mt-4 text-sm text-[#5d6b68]">

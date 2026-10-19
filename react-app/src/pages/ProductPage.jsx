@@ -42,13 +42,8 @@ export default function ProductPage() {
             {product.category}
           </p>
           <h1 className="mt-2 text-4xl font-extrabold text-[#12312e]">{product.name}</h1>
-          {product.unit ? <p className="mt-2 text-[#5d6b68]">Sold by {product.unit}</p> : null}
+          <p className="mt-2 text-[#5d6b68]">Sold by {product.unit || "1 pc"}</p>
           <p className="mt-4 text-3xl font-bold text-[#0e4a45]">{formatRwf(product.price)}</p>
-          <p className="mt-3 max-w-md text-sm text-[#5d6b68]">
-            {product.unit
-              ? "Typical Kigali retail for 2026, from supermarket shelves and city markets."
-              : "Added by a Selz seller."}
-          </p>
           {staff ? null : (
             <>
               <div className="mt-6 flex items-center gap-3">
@@ -76,7 +71,7 @@ export default function ProductPage() {
               </button>
               {added && (
                 <p className="mt-3 text-sm font-semibold text-[#0e4a45]">
-                  Added. Your cart stays in this browser.
+                  Added to cart.
                 </p>
               )}
             </>

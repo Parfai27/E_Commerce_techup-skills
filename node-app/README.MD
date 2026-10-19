@@ -79,7 +79,7 @@ Product reads are public. Creating, updating, and deleting a product requires a 
 | `DELETE` | `/api/auth/sellers/{id}` | Admin. Removes that seller and their products. |
 | `GET` | `/api/products` | Public list. A seller token returns only that seller's products. |
 | `GET` | `/api/products/{id}` | Public. |
-| `POST` | `/api/products` | Seller. Form fields: `name`, `category`, `price`, `image`. |
+| `POST` | `/api/products` | Seller. Form fields: `name`, `category`, `unit`, `price`, `image`. |
 | `PUT` | `/api/products/{id}` | Seller, own products only. `image` is optional. |
 | `DELETE` | `/api/products/{id}` | Seller, own products only. |
 

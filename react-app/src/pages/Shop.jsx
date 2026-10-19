@@ -1,7 +1,11 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useSearchParams } from "react-router-dom"
+import FieldMessage from "../components/FieldMessage"
 import ProductCard from "../components/ProductCard"
 import { useShelf } from "../context/ShelfContext"
+import { priceFilterSchema } from "../lib/schemas"
 
 const PAGE_SIZE = 8
 
@@ -45,6 +49,20 @@ export default function Shop() {
     return matched
   }, [products, q, category, min, max, sort])
 
+  const {
+    register: registerPrice,
+    handleSubmit: submitPrice,
+    reset: resetPrice,
+    formState: { errors: priceErrors },
+  } = useForm({
+    resolver: zodResolver(priceFilterSchema),
+    defaultValues: { min, max },
+  })
+
+  useEffect(() => {
+    resetPrice({ min, max })
+  }, [min, max, resetPrice])
+
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -79,30 +97,28 @@ export default function Shop() {
           </div>
           <form
             className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault()
-              const data = new FormData(event.currentTarget)
-              const next = updateParam(params, "min", String(data.get("min") || ""))
-              setParams(updateParam(next, "max", String(data.get("max") || "")))
-            }}
+            noValidate
+            onSubmit={submitPrice((values) => {
+              const next = updateParam(params, "min", values.min.trim())
+              setParams(updateParam(next, "max", values.max.trim()))
+            })}
           >
             <p className="text-sm font-bold text-[#12312e]">Price (RWF)</p>
             <div className="grid grid-cols-2 gap-2">
               <input
-                name="min"
-                defaultValue={min}
                 inputMode="numeric"
                 placeholder="Min"
                 className="rounded-xl border border-[#d7e0dc] px-3 py-2 text-sm"
+                {...registerPrice("min")}
               />
               <input
-                name="max"
-                defaultValue={max}
                 inputMode="numeric"
                 placeholder="Max"
                 className="rounded-xl border border-[#d7e0dc] px-3 py-2 text-sm"
+                {...registerPrice("max")}
               />
             </div>
+            <FieldMessage error={priceErrors.min || priceErrors.max} />
             <button
               type="submit"
               className="w-full rounded-xl bg-[#0e4a45] py-2 text-sm font-semibold text-white"

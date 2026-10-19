@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
           >
             {product.name}
           </Link>
-          {product.unit ? <p className="text-sm text-[#5d6b68]">{product.unit}</p> : null}
+          <p className="text-sm text-[#5d6b68]">{product.unit || "1 pc"}</p>
         </div>
         <p className="text-xl font-bold text-[#0e4a45]">{formatRwf(product.price)}</p>
         {staff ? null : (
